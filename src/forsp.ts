@@ -1,5 +1,6 @@
 /**
- * Forsp interpreter. Ported from the original written by xorvoid in C
+ * Forsp interpreter.
+ * The original version was ported from the C version written by xorvoid.
  */
 
 const DEBUG: boolean = false;
@@ -14,6 +15,7 @@ const TAG = {
   PAIR: 3,
   CLOS: 4,
   PRIM: 5,
+  STRING: 6,
 } as const;
 
 type Nil = { tag: 0 };
@@ -26,6 +28,7 @@ type Value =
   | Nil
   | Atom
   | { tag: 2; num: number }
+  | { tag: 6; str: string }
   | Pair
   | { tag: 4; clos: { body: Value; env: ListHead } }
   | { tag: 5; prim: { func: PrimFunc } };
@@ -56,6 +59,10 @@ function makeAtom(atom: string): Value {
 
 function makeNum(num: number): Value {
   return { tag: 2, num };
+}
+
+function makeString(str: string): Value {
+  return { tag: 6, str };
 }
 
 function makePair(car: Value, cdr: Value): Value {
@@ -180,6 +187,11 @@ function read(st: State): Value {
     return read(st);
   }
 
+  if (c === '"') {
+    advance(st);
+    return readString(st);
+  }
+
   if (c === "(") {
     advance(st);
     return readList(st);
@@ -219,6 +231,20 @@ function readList(st: State): Value {
   return makePair(first, second);
 }
 
+function readString(st: State): Value {
+  const start = st.inputPos;
+  let c = peek(st);
+  let isEscaped = false;
+  while (!isEscaped && c !== '"') {
+    isEscaped = c == "\\";
+    advance(st);
+    c = peek(st);
+  }
+  const str = st.input.slice(start, st.inputPos);
+  advance(st);
+  return makeString(str);
+}
+
 /**
  * Print
  */
@@ -235,6 +261,8 @@ function printRecurse(value: Value): string {
       return value.atom;
     case TAG.NUM:
       return value.num.toString();
+    case TAG.STRING:
+      return value.str;
     case TAG.PAIR:
       return `(${printRecurse(value.pair.car)}${printListTail(value.pair.cdr)}`;
     case TAG.CLOS:
