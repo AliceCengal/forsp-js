@@ -12,7 +12,16 @@ function main(argv: string[]) {
     inputProgram = argv[1];
     // console.log(argv[1]);
   } else {
-    inputProgram = readFileSync(argv[0]).toString();
+    try {
+      inputProgram = readFileSync(argv[0]).toString();
+    } catch (err: any) {
+      console.error(`Failed to open file '${argv[0]}'`);
+      if (err instanceof Error) {
+        console.error(err.message);
+      }
+      return;
+    }
+
     // console.log(readFileSync(argv[0]).toString());
   }
 
