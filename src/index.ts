@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
-import { run, setup } from "./forsp";
+import { IO, run, setup } from "./forsp";
+import path from "node:path";
 
 function main(argv: string[]) {
   // console.log(argv);
@@ -27,7 +28,31 @@ function main(argv: string[]) {
 
   if (!inputProgram) return;
 
-  const st = setup(inputProgram);
+  const adapter: IO = {
+    std: {
+      readLine: function (): string {
+        throw new Error("Function not implemented.");
+      },
+      printLine: function (str?: string): void {
+        console.log(str);
+      },
+      printError: function (str?: string): void {
+        console.error(str);
+      },
+    },
+    file: {
+      read: function (filePath: string): string {
+        const importRoot =
+          argv[0] === "--raw" ? process.cwd() : path.join(argv[0], "..");
+
+        let importPath = path.join(importRoot, filePath + ".fp");
+
+        const importedModule = readFileSync(importPath).toString();
+        return importedModule;
+      },
+    },
+  };
+  const st = setup(adapter, inputProgram);
   run(st);
 }
 

@@ -7,6 +7,7 @@ const DEBUG: boolean = false;
 const TOKEN_PUSH = "<";
 const TOKEN_POP = ">";
 const TOKEN_QUOTE = "'";
+const TOKEN_DICT = "@";
 
 const TAG = {
   NIL: 0,
@@ -33,6 +34,17 @@ type Value =
   | { tag: 4; clos: { body: Value; env: ListHead } }
   | { tag: 5; prim: { func: PrimFunc } };
 
+export type IO = {
+  std: {
+    readLine: () => string;
+    printLine: (str?: string) => void;
+    printError: (str?: string) => void;
+  };
+  file: {
+    read: (filePath: string) => string;
+  };
+};
+
 type State = {
   input: string;
   inputPos: number;
@@ -47,6 +59,7 @@ type State = {
   QUOTE: Value;
   PUSH: Value;
   POP: Value;
+  io: IO;
 };
 
 function makeNil(): Value {
@@ -95,6 +108,18 @@ function car(value: Value): Value {
 function cdr(value: Value): Value {
   if (value.tag !== TAG.PAIR) throw new Error("Cannot cdr a not-Pair");
   return value.pair.cdr;
+}
+
+function caar(value: Value): Value {
+  if (value.tag !== TAG.PAIR || value.pair.car.tag !== TAG.PAIR)
+    throw new Error("Cannot caar a not Pair Pair");
+  return value.pair.car.pair.car;
+}
+
+function cadr(value: Value): Value {
+  if (value.tag !== TAG.PAIR || value.pair.car.tag !== TAG.PAIR)
+    throw new Error("Cannot cadr a not Pair Pair");
+  return value.pair.car.pair.cdr;
 }
 
 function valueEq(v1: Value, v2: Value) {
@@ -250,8 +275,8 @@ function readString(st: State): Value {
  * Print
  */
 
-function print(value: Value) {
-  console.log(printRecurse(value));
+function print(st: State, value: Value) {
+  st.io.std.printLine(printRecurse(value));
 }
 
 function printRecurse(value: Value): string {
@@ -341,7 +366,7 @@ function pop(st: State) {
 
 function evaluate(st: State, env: ListHead, expr: Value) {
   if (DEBUG) {
-    console.log(`eval: ${printRecurse(expr)}`);
+    st.io.std.printLine(`eval: ${printRecurse(expr)}`);
   }
 
   switch (expr.tag) {
@@ -366,8 +391,8 @@ function evaluate(st: State, env: ListHead, expr: Value) {
 
 function compute(st: State, env: ListHead, compSrc: Value) {
   if (DEBUG) {
-    console.log(`compute: ${printRecurse(compSrc)}`);
-    console.log(`stack: ${printRecurse(st.stack)}`);
+    st.io.std.printLine(`compute: ${printRecurse(compSrc)}`);
+    st.io.std.printLine(`stack: ${printRecurse(st.stack)}`);
   }
 
   let comp = compSrc;
@@ -431,7 +456,7 @@ const PRIMITIVES: Record<string, PrimFunc> = {
     push(st, read(st));
   },
   print: (st, env) => {
-    print(pop(st));
+    print(st, pop(st));
   },
 };
 
@@ -448,7 +473,10 @@ const EXTRA_PRIMITIVES: Record<string, PrimFunc> = {
         cumm ? `${cumm} , ${printRecurse(curr)}` : printRecurse(curr),
       ""
     );
-    console.log(`[ ${dumpStr} ]`);
+    st.io.std.printLine(`[ ${dumpStr} ]`);
+  },
+  "dump-env": (st, env) => {
+    st.io.std.printLine(printRecurse(env.head));
   },
   "*": (st, env) => {
     const b = pop(st);
@@ -470,14 +498,84 @@ const EXTRA_PRIMITIVES: Record<string, PrimFunc> = {
     const a = pop(st);
     push(st, makeNum(toNumber(a) + toNumber(b)));
   },
+  import: (st, env) => {
+    const filePath = pop(st);
+    if (filePath.tag !== TAG.STRING) {
+      throw new Error("import expects a string operand");
+    }
+    try {
+      const module = st.io.file.read(filePath.str);
+      const subprocess = setup(st.io, module, st.NIL);
+      run(subprocess);
+
+      const importedEnv = subprocess.env;
+
+      while (
+        importedEnv.head != st.NIL &&
+        cadr(importedEnv.head).tag == TAG.PRIM
+      ) {
+        importedEnv.head = cdr(importedEnv.head) as List;
+      }
+
+      let prevPointer = importedEnv.head as Pair;
+      if (prevPointer !== st.NIL) {
+        let pointer = cdr(prevPointer) as List;
+        while (pointer !== st.NIL) {
+          // console.log("pointer", JSON.stringify(pointer));
+          if (cadr(pointer).tag === TAG.PRIM) {
+            prevPointer.pair.cdr = cdr(pointer);
+            pointer = cdr(pointer) as List;
+          } else {
+            prevPointer = pointer as Pair;
+            pointer = cdr(pointer) as List;
+          }
+        }
+      }
+
+      push(st, importedEnv.head);
+    } catch (err) {
+      st.io.std.printError(`Failed to import module "${filePath.str}"`);
+      if (err instanceof Error) {
+        st.io.std.printError(err.message);
+      }
+    }
+  },
+  "import*": (st, env) => {
+    const filePath = pop(st);
+    if (filePath.tag !== TAG.STRING) {
+      throw new Error("import expects a string operand");
+    }
+    try {
+      const module = st.io.file.read(filePath.str);
+      const subprocess = setup(st.io, module, st.NIL);
+      run(subprocess);
+
+      let importedEnv = subprocess.env.head;
+
+      while (importedEnv !== st.NIL) {
+        if (cadr(importedEnv).tag !== TAG.PRIM) {
+          const key = caar(importedEnv);
+          if (key.tag === TAG.ATOM) {
+            envDefine(env, intern(st, key.atom) as Atom, cadr(importedEnv));
+          }
+        }
+        importedEnv = cdr(importedEnv) as List;
+      }
+    } catch (err) {
+      st.io.std.printError(`Failed to import module "${filePath.str}"`);
+      if (err instanceof Error) {
+        st.io.std.printError(err.message);
+      }
+    }
+  },
 };
 
 /**
  * Interpreter
  */
 
-export function setup(inputProgram: string): State {
-  const nil = makeNil() as List;
+export function setup(adapter: IO, inputProgram: string, refNil?: any): State {
+  const nil = refNil ?? (makeNil() as List);
   const st: State = {
     input: inputProgram,
     inputPos: 0,
@@ -492,6 +590,7 @@ export function setup(inputProgram: string): State {
     QUOTE: null as any,
     PUSH: null as any,
     POP: null as any,
+    io: adapter,
   };
 
   st.TRUE = intern(st, "t");
@@ -516,10 +615,10 @@ export function run(st: State) {
     compute(st, st.env, obj);
   } catch (err) {
     if (err instanceof Error) {
-      console.error(err.message);
+      st.io.std.printError(err.message);
       // console.error("stack", JSON.stringify(st.stack));
       // console.error("env", JSON.stringify(st.env));
-      console.error(err.stack);
+      st.io.std.printError(err.stack ?? "");
     }
   }
 }
