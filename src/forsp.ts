@@ -235,12 +235,13 @@ function readString(st: State): Value {
   const start = st.inputPos;
   let c = peek(st);
   let isEscaped = false;
-  while (!isEscaped && c !== '"') {
+  while (isEscaped || c !== '"') {
     isEscaped = c == "\\";
     advance(st);
     c = peek(st);
   }
-  const str = st.input.slice(start, st.inputPos);
+  let str = st.input.slice(start, st.inputPos);
+  str = JSON.parse(`["${str}"]`)[0]; // SORRY
   advance(st);
   return makeString(str);
 }
