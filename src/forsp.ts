@@ -518,6 +518,11 @@ const EXTRA_PRIMITIVES: Record<string, PrimFunc> = {
       }
 
       let prevPointer = importedEnv.head as Pair;
+      let prevValue = car(prevPointer) as Pair;
+      if (car(prevValue).tag === TAG.ATOM) {
+        prevValue.pair.car = intern(st, (car(prevValue) as Atom).atom);
+      }
+
       if (prevPointer !== st.NIL) {
         let pointer = cdr(prevPointer) as List;
         while (pointer !== st.NIL) {
@@ -528,6 +533,11 @@ const EXTRA_PRIMITIVES: Record<string, PrimFunc> = {
           } else {
             prevPointer = pointer as Pair;
             pointer = cdr(pointer) as List;
+
+            prevValue = car(prevPointer) as Pair;
+            if (car(prevValue).tag === TAG.ATOM) {
+              prevValue.pair.car = intern(st, (car(prevValue) as Atom).atom);
+            }
           }
         }
       }
