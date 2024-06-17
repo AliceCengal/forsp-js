@@ -212,6 +212,33 @@ function read(st: State): Value {
     return read(st);
   }
 
+  if (c === TOKEN_DICT) {
+    advance(st);
+    const c = peek(st);
+    if (c !== "(") {
+      throw new Error(
+        `${TOKEN_DICT} sigil must be used in the form '${TOKEN_DICT}(... ...)'`
+      );
+    }
+    advance(st);
+    const dictGet = intern(st, "dict-get");
+    let dictList = readList(st);
+    if (dictList == st.NIL) {
+      throw new Error(`${TOKEN_DICT} list cannot be empty`);
+    }
+
+    let dictStack = [car(dictList)];
+    dictList = cdr(dictList);
+
+    while (dictList != st.NIL) {
+      dictStack.push(st.QUOTE, car(dictList), dictGet);
+      dictList = cdr(dictList);
+    }
+
+    st.readStack = st.readStack.concat(dictStack.toReversed());
+    return read(st);
+  }
+
   if (c === '"') {
     advance(st);
     return readString(st);
@@ -505,44 +532,16 @@ const EXTRA_PRIMITIVES: Record<string, PrimFunc> = {
     }
     try {
       const module = st.io.file.read(filePath.str);
-      const subprocess = setup(st.io, module, st.NIL);
-      run(subprocess);
 
-      const importedEnv = subprocess.env;
+      st.input = module;
+      st.inputPos = 0;
+      const moduleObj = read(st);
 
-      while (
-        importedEnv.head != st.NIL &&
-        cadr(importedEnv.head).tag == TAG.PRIM
-      ) {
-        importedEnv.head = cdr(importedEnv.head) as List;
-      }
+      const oriEnv = env.head;
+      compute(st, env, moduleObj);
 
-      let prevPointer = importedEnv.head as Pair;
-      let prevValue = car(prevPointer) as Pair;
-      if (car(prevValue).tag === TAG.ATOM) {
-        prevValue.pair.car = intern(st, (car(prevValue) as Atom).atom);
-      }
-
-      if (prevPointer !== st.NIL) {
-        let pointer = cdr(prevPointer) as List;
-        while (pointer !== st.NIL) {
-          // console.log("pointer", JSON.stringify(pointer));
-          if (cadr(pointer).tag === TAG.PRIM) {
-            prevPointer.pair.cdr = cdr(pointer);
-            pointer = cdr(pointer) as List;
-          } else {
-            prevPointer = pointer as Pair;
-            pointer = cdr(pointer) as List;
-
-            prevValue = car(prevPointer) as Pair;
-            if (car(prevValue).tag === TAG.ATOM) {
-              prevValue.pair.car = intern(st, (car(prevValue) as Atom).atom);
-            }
-          }
-        }
-      }
-
-      push(st, importedEnv.head);
+      push(st, env.head);
+      env.head = oriEnv;
     } catch (err) {
       st.io.std.printError(`Failed to import module "${filePath.str}"`);
       if (err instanceof Error) {
@@ -557,20 +556,11 @@ const EXTRA_PRIMITIVES: Record<string, PrimFunc> = {
     }
     try {
       const module = st.io.file.read(filePath.str);
-      const subprocess = setup(st.io, module, st.NIL);
-      run(subprocess);
 
-      let importedEnv = subprocess.env.head;
-
-      while (importedEnv !== st.NIL) {
-        if (cadr(importedEnv).tag !== TAG.PRIM) {
-          const key = caar(importedEnv);
-          if (key.tag === TAG.ATOM) {
-            envDefine(env, intern(st, key.atom) as Atom, cadr(importedEnv));
-          }
-        }
-        importedEnv = cdr(importedEnv) as List;
-      }
+      st.input = module;
+      st.inputPos = 0;
+      const moduleObj = read(st);
+      compute(st, env, moduleObj);
     } catch (err) {
       st.io.std.printError(`Failed to import module "${filePath.str}"`);
       if (err instanceof Error) {
@@ -584,8 +574,8 @@ const EXTRA_PRIMITIVES: Record<string, PrimFunc> = {
  * Interpreter
  */
 
-export function setup(adapter: IO, inputProgram: string, refNil?: any): State {
-  const nil = refNil ?? (makeNil() as List);
+export function setup(adapter: IO, inputProgram: string): State {
+  const nil = makeNil() as List;
   const st: State = {
     input: inputProgram,
     inputPos: 0,
@@ -603,7 +593,7 @@ export function setup(adapter: IO, inputProgram: string, refNil?: any): State {
     io: adapter,
   };
 
-  st.TRUE = intern(st, "t");
+  st.TRUE = intern(st, "#t");
   st.QUOTE = intern(st, "quote");
   st.PUSH = intern(st, "push");
   st.POP = intern(st, "pop");

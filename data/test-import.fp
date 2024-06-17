@@ -1,21 +1,19 @@
 (
   (
-    "./std" import >std
+    "./test-lib" import >std
     <std print
-    "import success" print
+    "dict import success" print
+    ; f print; should throw error
   ) >test-dict-import
 
   (
-    "./std" import*
-    dump-env
+    "./test-lib" import*
     <h print
+    "star import success" print
   ) >test-star-import
   
   test-star-import 
-
-  ; @(std h)
-  ; quote std quote h dict-get 
-
-  ; @(std h bar)
-  ; quote std quote h dict-get quote bar dict-get
+  test-dict-import 
+  ; <h print ; should throw error
+  ; <std print ; should throw error
 )
