@@ -16,7 +16,14 @@
   (tag 1 eq)                           >atom?
   (tag 2 eq)                           >num?
   (tag 3 eq)                           >pair?
-  
+
+  ;; bitwise ops
+
+  ;; >b-nor is primitive
+  (dup b-nor swap dup b-nor b-nor)     >b-and
+  (b-nor dup b-nor)                    >b-or
+  (dup b-nor)                          >b-not
+
   ;; List
 
   (

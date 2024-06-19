@@ -514,6 +514,21 @@ const EXTRA_PRIMITIVES: Record<string, PrimFunc> = {
     const a = pop(st);
     push(st, makeNum(toNumber(a) + toNumber(b)));
   },
+  "b-nor": (st, env) => {
+    const b = pop(st);
+    const a = pop(st);
+    push(st, makeNum(~(toNumber(a) | toNumber(b))));
+  },
+  "b-shr": (st, env) => {
+    const b = pop(st);
+    const a = pop(st);
+    push(st, makeNum(toNumber(a) >> toNumber(b)));
+  },
+  "b-shl": (st, env) => {
+    const b = pop(st);
+    const a = pop(st);
+    push(st, makeNum(toNumber(a) << toNumber(b)));
+  },
   import: (st, env) => {
     const filePath = pop(st);
     if (filePath.tag !== TAG.STRING) {
