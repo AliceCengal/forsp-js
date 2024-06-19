@@ -488,22 +488,11 @@ const PRIMITIVES: Record<string, PrimFunc> = {
 };
 
 const EXTRA_PRIMITIVES: Record<string, PrimFunc> = {
-  "dump-stack": (st, env) => {
-    const dump: Value[] = [];
-    let pointer = st.stack;
-    while (pointer != st.NIL) {
-      dump.push(car(pointer));
-      pointer = cdr(pointer) as List;
-    }
-    const dumpStr = dump.reduceRight(
-      (cumm, curr) =>
-        cumm ? `${cumm} , ${printRecurse(curr)}` : printRecurse(curr),
-      ""
-    );
-    st.io.std.printLine(`[ ${dumpStr} ]`);
+  stack: (st, env) => {
+    push(st, st.stack);
   },
-  "dump-env": (st, env) => {
-    st.io.std.printLine(printRecurse(env.head));
+  env: (st, env) => {
+    push(st, env.head);
   },
   "*": (st, env) => {
     const b = pop(st);

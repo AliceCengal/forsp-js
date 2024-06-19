@@ -88,76 +88,76 @@
  ) rec >length
 
  ; depth
- ;(stack length) >depth
+ (stack length) >depth
 
  'length print
  '(1 2 3 4) length print
 
  ; dropall
- ;(>self <if depth 1 eq () (>_ self) endif)
- ;rec >dropall
+ (>self <if depth 1 eq () (>_ self) endif)
+ rec >dropall
 
- ;dropall
- ;'depth2 print
- ;3 4 depth print
- ;dropall
- ;'depth0 print
- ;depth print
+ dropall
+ 'depth2 print
+ 3 4 depth print
+ dropall
+ 'depth0 print
+ depth print
 
- ; reverse
- (>self >list >new
-   <if ('() <list eq) <new
-     (<new <list car cons <list cdr self)
-   endif
- ) rec
- (>helper (>list '() <list helper)) force
- >reverse
+  ; reverse
+  (>self >list >new
+    <if ('() <list eq) <new
+      (<new <list car cons <list cdr self)
+    endif
+  ) rec
+  (>helper (>list '() <list helper)) force
+  >reverse
 
- ; explode
- (>self >list
+  ; explode
+  (>self >list
+    <if ('() <list eq) ()
+      (<list cdr self <list car)
+    endif
+  ) rec >explode
+
+  ; implode
+  (>self >n
+    <if (0 <n eq) '()
+      (>tmp <n 1 - self <tmp cons)
+    endif
+  ) rec >implode
+
+
+  'reverse print
+  '(1 2 3) reverse print
+
+  depth print
+  '(1 2 3) dup explode
+  depth print
+  3 implode print
+
+  10 0 range explode 10 + 10 implode print
+
+  ; factorial
+  (>self >n
+    <if (<n 0 eq) 1
+      (<n 1 - self <n *)
+    endif
+  ) rec >factorial
+
+  5 factorial print
+
+  ; stack-set
+  (>self >list
    <if ('() <list eq) ()
      (<list cdr self <list car)
    endif
- ) rec >explode
+  ) rec
+  (>helper (>list dropall <list helper)) force >stack-set
 
- ; implode
- (>self >n
-   <if (0 <n eq) '()
-     (>tmp <n 1 - self <tmp cons)
-   endif
- ) rec >implode
-
-
- 'reverse print
- '(1 2 3) reverse print
-
- dump-stack ;depth print
- '(1 2 3) dup explode
- dump-stack ;depth print
- 3 implode print
-
- 10 0 range explode 10 + 10 implode print
-
- ; factorial
- (>self >n
-   <if (<n 0 eq) 1
-     (<n 1 - self <n *)
-   endif
- ) rec >factorial
-
- 5 factorial print
-
- ; stack-set
- ;(>self >list
- ;  <if ('() <list eq) ()
- ;    (<list cdr self <list car)
- ;  endif
- ;) rec
- ;(>helper (>list dropall <list helper)) force >stack-set
-
- ;dropall
- ;5 4
- ;stack print
- ;(8 9) force stack stack-set + print
+  dropall
+  5 4
+  stack print
+  (8 9) force stack stack-set + print
 
 )

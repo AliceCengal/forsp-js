@@ -3,21 +3,21 @@
   ;; adapted from xorvoid
 
   5
-  dump-stack
+  stack print
   4 3
-  dump-stack
+  stack print
 
   print
-  dump-stack
+  stack print
 
   * print
-  dump-stack
+  stack print
 
   5 >my-variable
-  dump-stack
+  stack print
 
   <my-variable
-  dump-stack
+  stack print
 
   >_
 
@@ -26,15 +26,15 @@
   (>x <x <x *) >square
 
   67 square
-  dump-stack
+  stack print
 
   'something
   '(1 2 3)
   '(abd (1 foo) ())
-  dump-stack
+  stack print
 
   quote other
-  dump-stack
+  stack print
 
   (>_) >drop
 
@@ -48,11 +48,11 @@
   (>x >y <y <x <y) >over
   (>x >y >z <y <x <z) >rot
 
-  9 8 7 dump-stack  ; [ 9 , 8 , 7 ]
-  swap dump-stack   ; [ 9 , 7 , 8 ]
-  over dump-stack   ; [ 9 , 7 , 8 , 7 ]
-  drop dump-stack   ; [ 9 , 7 , 8 ]
-  rot dump-stack    ; [ 7 , 8 , 9 ]
+  9 8 7 stack print  ; [ 9 , 8 , 7 ]
+  swap stack print   ; [ 9 , 7 , 8 ]
+  over stack print   ; [ 9 , 7 , 8 , 7 ]
+  drop stack print   ; [ 9 , 7 , 8 ]
+  rot stack print    ; [ 7 , 8 , 9 ]
 
   (0 swap - -) >plus
   4 5 plus print ; 
