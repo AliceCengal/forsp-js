@@ -7,9 +7,11 @@
 
   ; All numbers follow JS number semantics
 
+  4.765 print;
+
   ; No low-level memory unsafe operations
 
-  ;; The following are extensions provided forsp-js , not available in the 
+  ;; The following are extensions provided by forsp-js , not available in the 
   ;; original C implementation
 
   ; String values in double quotes
@@ -18,20 +20,21 @@
 
   ; import* statement executes another Forsp script file with the given name and 
   ; appends the env created by that file into the current env. There is no protection
-  ; against recursive import, so you are free to blow your own stack
+  ; against recursive import, so you are free to blow your own stack.
 
   "./std" import*
 
   "hello world" string? print; #t
 
   ; import statement executes another Forsp script file with the given name and
-  ; pushes a dictionary containing the env created by that file onto the stack
+  ; pushes a dictionary containing the env created by that file onto the stack.
+  ; Again, no protection against recursive import.
 
   "./std" import >std
 
   ; A dictionary is an ordered list of key-value pairs built from cons shells.
-  ; Given that is this is a very common structure in most programming tasks,
-  ; there is a special syntax to access its value
+  ; Since this data structure is so commonly used in many programming tasks,
+  ; there is a special syntax to access its value.
 
   "hello world"
   @(std string?)  ; <-- dictionary get syntax
@@ -40,11 +43,10 @@
   ; the above expression desugars into:
 
   "hello world"
-  <std 'string? dict-get 
+  <std 'string? dict-get
   force print ; #t
 
-  ; since dict-get is defined in "./std" , the above syntax is only valid after
+  ; since dict-get is defined in "std.fp" , the above syntax is only valid after
   ; a `"./std" import*`
-
 
 )

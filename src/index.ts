@@ -45,7 +45,7 @@ function main(argv: string[]) {
         const importRoot =
           argv[0] === "--raw" ? process.cwd() : path.join(argv[0], "..");
 
-        let importPath = path.join(importRoot, filePath + ".fp");
+        let importPath = path.join(importRoot, filePath);
 
         const importedModule = readFileSync(importPath).toString();
         return importedModule;

@@ -534,38 +534,51 @@ const EXTRA_PRIMITIVES: Record<string, PrimFunc> = {
     if (filePath.tag !== TAG.STRING) {
       throw new Error("import expects a string operand");
     }
+
+    const oriEnv = env.head;
     try {
-      const module = st.io.file.read(filePath.str);
+      let importPath = filePath.str;
+      if (!importPath.endsWith(".fp")) {
+        importPath = `${importPath}.fp`;
+      }
+      const module = st.io.file.read(importPath);
 
       st.input = module;
       st.inputPos = 0;
       const moduleObj = read(st);
 
-      const oriEnv = env.head;
       compute(st, env, moduleObj);
 
       push(st, env.head);
-      env.head = oriEnv;
     } catch (err) {
       st.io.std.printError(`Failed to import module "${filePath.str}"`);
       if (err instanceof Error) {
         st.io.std.printError(err.message);
       }
+    } finally {
+      env.head = oriEnv;
     }
   },
   "import*": (st, env) => {
     const filePath = pop(st);
     if (filePath.tag !== TAG.STRING) {
-      throw new Error("import expects a string operand");
+      throw new Error("import* expects a string operand");
     }
+
+    const oriEnv = env.head;
     try {
-      const module = st.io.file.read(filePath.str);
+      let importPath = filePath.str;
+      if (!importPath.endsWith(".fp")) {
+        importPath = `${importPath}.fp`;
+      }
+      const module = st.io.file.read(importPath);
 
       st.input = module;
       st.inputPos = 0;
       const moduleObj = read(st);
       compute(st, env, moduleObj);
     } catch (err) {
+      env.head = oriEnv;
       st.io.std.printError(`Failed to import module "${filePath.str}"`);
       if (err instanceof Error) {
         st.io.std.printError(err.message);
