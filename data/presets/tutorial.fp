@@ -115,16 +115,16 @@
   ;
   ;     primitive [args]          |  description                                      | example usage
   ;     --------------------------|---------------------------------------------------|--------------
-  ;     push  [$name]             |  resolve "name" in environment and push           | 'foo push
-  ;     pop   [$name $val]        |  bind "val" to "name" in environment              | 'foo pop
-  ;     eq    [$a $b]             |  if "a" and "b" are equal, then "t", else "()"    | 'a 'b eq
-  ;     cons  [$fst $snd]         |  construct a pair from "fst" and "snd"            | '(2 3) 1 cons
-  ;     car   [$pair]             |  extract the first element of a pair              | '(1 2 3) car
-  ;     cdr   [$pair]             |  extract the second element of a pair             | '(1 2 3) cdr
-  ;     cswap [$cond $a $b]       |  if cond is "t" then perform a swap               | 1 2 't cswap
-  ;     tag   [$obj]              |  query the type-tag of any object                 | ^tag tag
+  ;     push  [>name]             |  resolve "name" in environment and push           | 'foo push
+  ;     pop   [>name >val]        |  bind "val" to "name" in environment              | 'foo pop
+  ;     eq    [>a >b]             |  if "a" and "b" are equal, then "#t", else "()"   | 'a 'b eq
+  ;     cons  [>fst >snd]         |  construct a pair from "fst" and "snd"            | '(2 3) 1 cons
+  ;     car   [>pair]             |  extract the first element of a pair              | '(1 2 3) car
+  ;     cdr   [>pair]             |  extract the second element of a pair             | '(1 2 3) cdr
+  ;     cswap [>cond >a >b]       |  if cond is "#t" then perform a swap              | 1 2 't cswap
+  ;     tag   [>obj]              |  query the type-tag of any object                 | <tag tag
   ;     read  []                  |  read an s-expression from input data             | read
-  ;     print [$obj]              |  print an object as an s-expression               | '(foo bar) print
+  ;     print [>obj]              |  print an object as an s-expression               | '(foo bar) print
   ;
   ;   EXTRA: Additional primitives that are not strictly needed by useful to have
   ;

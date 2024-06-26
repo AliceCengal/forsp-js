@@ -214,28 +214,9 @@ function read(st: State): Value {
 
   if (c === TOKEN_DICT) {
     advance(st);
-    const c = peek(st);
-    if (c !== "(") {
-      throw new Error(
-        `${TOKEN_DICT} sigil must be used in the form '${TOKEN_DICT}(... ...)'`
-      );
-    }
-    advance(st);
     const dictGet = intern(st, "dict-get");
-    let dictList = readList(st);
-    if (dictList == st.NIL) {
-      throw new Error(`${TOKEN_DICT} list cannot be empty`);
-    }
 
-    let dictStack = [car(dictList)];
-    dictList = cdr(dictList);
-
-    while (dictList != st.NIL) {
-      dictStack.push(st.QUOTE, car(dictList), dictGet);
-      dictList = cdr(dictList);
-    }
-
-    st.readStack = st.readStack.concat(dictStack.toReversed());
+    st.readStack.push(dictGet, readScalar(st), st.QUOTE);
     return read(st);
   }
 
@@ -398,6 +379,7 @@ function evaluate(st: State, env: ListHead, expr: Value) {
 
   switch (expr.tag) {
     case TAG.ATOM: {
+      if (expr.atom == "#t") return push(st, expr);
       const val = envFind(env, expr);
       switch (val.tag) {
         case TAG.CLOS:
@@ -454,7 +436,7 @@ const PRIMITIVES: Record<string, PrimFunc> = {
     const v = pop(st);
     envDefine(env, k, v);
   },
-  eq: (st, env) => {
+  "eq?": (st, env) => {
     push(st, valueEq(pop(st), pop(st)) ? st.TRUE : st.NIL);
   },
   cons: (st, env) => {
@@ -493,6 +475,25 @@ const EXTRA_PRIMITIVES: Record<string, PrimFunc> = {
   },
   env: (st, env) => {
     push(st, env.head);
+  },
+  "set!": (st, env) => {
+    const clos = pop(st);
+    if (clos.tag !== TAG.CLOS) throw new Error("Operand must be a closure");
+    compute(st, clos.clos.env, clos.clos.body);
+    const val = pop(st);
+    const key = pop(st);
+    if (key.tag !== TAG.ATOM) throw new Error("Operand must contain an atom");
+
+    let pointer = env.head;
+    while (pointer != st.NIL) {
+      if (caar(pointer) == key) {
+        let pair = car(pointer) as Pair;
+        pair.pair.cdr = val;
+        return;
+      }
+      pointer = cdr(pointer) as List;
+    }
+    throw new Error(`Cannot set unbound symbol "${key.atom}"`);
   },
   "*": (st, env) => {
     const b = pop(st);

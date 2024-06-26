@@ -37,13 +37,13 @@
   ; there is a special syntax to access its value.
 
   "hello world"
-  @(std string?)  ; <-- dictionary get syntax
+  std @string?  ; <-- dictionary get syntax
   force print ;  #t
 
   ; the above expression desugars into:
 
   "hello world"
-  <std 'string? dict-get
+  std 'string? dict-get
   force print ; #t
 
   ; since dict-get is defined in "std.fp" , the above syntax is only valid after
