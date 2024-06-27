@@ -554,6 +554,15 @@ const EXTRA_PRIMITIVES: Record<string, PrimFunc> = {
     const a = pop(st);
     push(st, makeNum(toNumber(a) << toNumber(b)));
   },
+  "gt?": (st, env) => {
+    const b = pop(st);
+    const a = pop(st);
+    if (a.tag === TAG.STRING && b.tag === TAG.STRING) {
+      push(st, a.str > b.str ? st.TRUE : st.NIL);
+    } else {
+      push(st, toNumber(a) > toNumber(b) ? st.TRUE : st.NIL);
+    }
+  },
   import: (st, env) => {
     const filePath = pop(st);
     if (filePath.tag !== TAG.STRING) {

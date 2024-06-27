@@ -6,19 +6,28 @@
   (>f (>x (<x x) f) dup force)         >Y
   (>g (<g Y))                          >rec
 
+  ;; Boolean logic
+
+  ; #t is primitive
   ('())                                >nil
   ('() eq?)                            >null?
+  ('() eq?)                            >not?
+  (swap force dup cswap drop force)    >or?
+  (swap force dup not? cswap >_ force) >and?
+
   (tag 1 eq?)                          >atom?
   (tag 2 eq?)                          >num?
   (tag 3 eq?)                          >pair?
   (tag 4 eq?)                          >closure?
-  ('() eq?)                            >not?
-  (swap force dup cswap drop force)    >or?
-  (swap force dup not? cswap drop force) >and?
 
   ((>x x cswap >_ >x x))               >if
   (>f >t >c >fn <f <t <c fn)           >endif
   ((>c >t >f (<f <t <c if >x x) endif)) >elseif
+
+  ; `gt?` is primitive
+  (swap gt? not?)                      >gte?
+  (swap gt?)                           >lt?
+  (gt? not?)                           >lte?
 
   ;; bitwise ops
 
@@ -27,10 +36,8 @@
   (nand dup nand)                      >&
   (dup nand)                           >~
   (
-    >b >a 
-    <a <a <b nand nand 
-    <b <a <b nand nand 
-    nand
+    >b >a <a <b nand >ab
+    <a <ab nand <b <ab nand nand
   )                                    >^
 
   ;; List
@@ -56,6 +63,14 @@
       (<list cdr self 1 +)
     endif
   ) rec                                >length
+
+  ; range
+
+  ; sort
+
+  ; take
+
+  ; drop
 
   ; explode [ list[n] -> n[ val ] ]
   (
@@ -116,9 +131,7 @@
   ) rec                                >dict-get
 
   ; dict-set [ (value key) dict -> dict ]
-  (
-    force swap cons cons
-  )                                 >dict-set
+  (force swap cons cons)               >dict-set
 
   (
     
@@ -127,5 +140,14 @@
   ;; String
 
   (tag 6 eq?)                           >string?
+
+  ;; Higher order functions
+
+  ; reduce
+
+  ; filter
+
+  ; map
+
 
 )
