@@ -111,17 +111,7 @@
 
   ; dict-set [ (value key) dict -> dict ]
   (
-    ;force swap cons cons
-    force >v >k
-    (
-      >self >dict
-      if (<dict null?)
-        (nil v k cons cons)
-      elseif (<dict car car k eq?)
-        (<dict cdr v k cons cons)
-        (<dict cdr self <dict car cons)
-      endif
-    ) rec force
+    force swap cons cons
   )                                 >dict-set
 
   (

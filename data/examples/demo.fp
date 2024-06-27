@@ -29,21 +29,21 @@
 
  ; Sum 1 -> n (recursively defined)
  (>self >n
-   <if (0 <n eq)
+   <if (0 <n eq?)
      (<n 1 - self <n +)
    endif
  ) rec >sum
 
  ; Map fn() over list
  (>self >fn >list
-    <if ('() <list eq) '()
+    <if ('() <list eq?) '()
       (<list cdr <fn self <list car fn cons)
     endif
  ) rec >map
 
  ; Range
  (>self >start >end
-   <if (<start <end eq) '()
+   <if (<start <end eq?) '()
      (<end <start 1 + self <start cons)
    endif
  ) rec >range
@@ -61,16 +61,16 @@
 
  'foo 'bar swap cons print
 
- 'a 'a eq
+ 'a 'a eq?
 
  123 print
 
- 12 34 eq print
- 34 35 1 - eq print
+ 12 34 eq? print
+ 34 35 1 - eq? print
 
  ; For loop
  (>self >iter >body
-   <if ('() <iter eq) '()
+   <if ('() <iter eq?) '()
      (<iter car body
       <body <iter cdr self)
    endif
@@ -82,7 +82,7 @@
 
  ; length
  (>self >list
-   <if (<list '() eq) 0
+   <if (<list '() eq?) 0
      (<list cdr self 1 +)
    endif
  ) rec >length
@@ -94,7 +94,7 @@
  '(1 2 3 4) length print
 
  ; dropall
- (>self <if depth 1 eq () (>_ self) endif)
+ (>self <if depth 1 eq? () (>_ self) endif)
  rec >dropall
 
  dropall
@@ -106,7 +106,7 @@
 
   ; reverse
   (>self >list >new
-    <if ('() <list eq) <new
+    <if ('() <list eq?) <new
       (<new <list car cons <list cdr self)
     endif
   ) rec
@@ -115,14 +115,14 @@
 
   ; explode
   (>self >list
-    <if ('() <list eq) ()
+    <if ('() <list eq?) ()
       (<list cdr self <list car)
     endif
   ) rec >explode
 
   ; implode
   (>self >n
-    <if (0 <n eq) '()
+    <if (0 <n eq?) '()
       (>tmp <n 1 - self <tmp cons)
     endif
   ) rec >implode
@@ -140,7 +140,7 @@
 
   ; factorial
   (>self >n
-    <if (<n 0 eq) 1
+    <if (<n 0 eq?) 1
       (<n 1 - self <n *)
     endif
   ) rec >factorial
@@ -149,7 +149,7 @@
 
   ; stack-set
   (>self >list
-   <if ('() <list eq) ()
+   <if ('() <list eq?) ()
      (<list cdr self <list car)
    endif
   ) rec

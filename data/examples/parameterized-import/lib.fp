@@ -1,0 +1,5 @@
+(
+  >msg
+
+  (<msg print) >holler
+)

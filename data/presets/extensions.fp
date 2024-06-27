@@ -1,9 +1,14 @@
 (
   ;; Differences found in the forsp-js implementation
 
-  ; truth is represented by #t instead of just t, following Scheme convention
+  ; truth is represented by `#t` instead of just `t`, and the equality test is
+  ; `eq?`, following Scheme convention
 
-  3 4 + 7 eq print ; #t
+  3 4 + 7 eq? print ; #t
+
+  ; POP and PUSH use the '>' and '<' sigils
+
+  5 >x <x print;
 
   ; All numbers follow JS number semantics
 
@@ -45,6 +50,11 @@
   "hello world"
   std 'string? dict-get
   force print ; #t
+
+  ; It is also common to execute a closure freshly taken out of a 
+  ; dictionary. Use the `@!` form to tack on an additional `force`
+
+  "hello world" std @!string? print ; same as the above expression
 
   ; since dict-get is defined in "std.fp" , the above syntax is only valid after
   ; a `"./std" import*`

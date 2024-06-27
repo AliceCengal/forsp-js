@@ -6,7 +6,7 @@
   l print;
   l car print;
   l list? print;
-  ;#t print;
+
   5 list? print;
   nil list? print;
   l length print;

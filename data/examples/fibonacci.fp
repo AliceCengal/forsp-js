@@ -9,7 +9,7 @@
   (>x >y >z <y <x <z) >rot
   (>x x) >force
   ('()) >nil
-  ('() eq) >null?
+  ('() eq?) >null?
 
   (force cswap >_ force) >if
   (>f >t >c >fn <f <t <c fn) >endif
@@ -20,7 +20,7 @@
   ; range
   (
     >self >start >end
-    <if <start <end eq
+    <if <start <end eq?
       nil
       (<end <start 1 + self <start cons)
     endif
@@ -39,7 +39,7 @@
     1 1
     (
       >self >a >b >n
-      <if <n 0 eq
+      <if <n 0 eq?
         <b
         (<n 1 - <a <b + <b self)
       endif

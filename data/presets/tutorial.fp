@@ -23,9 +23,6 @@
   ; Now we have something! Let's put on a few more numbers
 
   4 3
-
-  ; Now we have something! Let's put on a few more numbers
-
   stack print ; (3 4 5)
 
   ; A stack is LIFO order, or Last-In-First-Off. This means that the next value
@@ -58,7 +55,7 @@
   >_
   
   ; Coolio. Notice that we bound the variable "_" to remove the value from the 
-  ; stack. Now, say we wanted to square "my-variable". we could to the following:
+  ; stack. Now, say we wanted to square "my-variable". we could do the following:
 
   <my-variable <my-variable * print ; 25
 
@@ -84,7 +81,7 @@
   stack print ; 36
 
   ; How cool! It should be easy enough to understand the function definition: 
-  ; ($x ^x ^x *). Pop and bind "x". Push "x". Push "x" again. Call the "*" function.
+  ; (>x <x <x *). Pop and bind "x". Push "x". Push "x" again. Call the "*" function.
 
   ; Sometimes you need to refer to some data that you don't want evaluated.
   ; For this, you can simply quote the value:
@@ -117,11 +114,11 @@
   ;     --------------------------|---------------------------------------------------|--------------
   ;     push  [>name]             |  resolve "name" in environment and push           | 'foo push
   ;     pop   [>name >val]        |  bind "val" to "name" in environment              | 'foo pop
-  ;     eq    [>a >b]             |  if "a" and "b" are equal, then "#t", else "()"   | 'a 'b eq
+  ;     eq?   [>a >b]             |  if "a" and "b" are equal, then "#t", else "()"   | 'a 'b eq?
   ;     cons  [>fst >snd]         |  construct a pair from "fst" and "snd"            | '(2 3) 1 cons
   ;     car   [>pair]             |  extract the first element of a pair              | '(1 2 3) car
   ;     cdr   [>pair]             |  extract the second element of a pair             | '(1 2 3) cdr
-  ;     cswap [>cond >a >b]       |  if cond is "#t" then perform a swap              | 1 2 't cswap
+  ;     cswap [>cond >a >b]       |  if cond is "#t" then perform a swap              | 1 2 #t cswap
   ;     tag   [>obj]              |  query the type-tag of any object                 | <tag tag
   ;     read  []                  |  read an s-expression from input data             | read
   ;     print [>obj]              |  print an object as an s-expression               | '(foo bar) print
@@ -183,7 +180,7 @@
 
   (>cond >true >false cond <false <true rot cswap drop force) >if
 
-  (5) (4) '#t if print ; 4
+  (5) (4) #t if print ; 4
   (5) (4) '() if print ; 5
 
   ; Writing if-statements backwards is tricky, so we can fix it by defining 
@@ -193,12 +190,12 @@
 
   ; Now we can write:
 
-  <if (1 2 eq)
+  <if (1 2 eq?)
     ("true" print)
     ("false" print) ; false
   endif
 
-  <if (1 1 eq)
+  <if (1 1 eq?)
     ("true" print) ; true
     ("false" print)
   endif
@@ -214,7 +211,7 @@
   ; Now we can implement recursive functions:
 
   (>self >list
-    <if (<list '() eq) 
+    <if (<list '() eq?) 
       0 
       (<list cdr self 1 +)
     endif

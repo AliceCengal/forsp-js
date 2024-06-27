@@ -8,6 +8,7 @@ const TOKEN_PUSH = "<";
 const TOKEN_POP = ">";
 const TOKEN_QUOTE = "'";
 const TOKEN_DICT = "@";
+const TOKEN_SPEC = "#";
 
 const TAG = {
   NIL: 0,
@@ -214,10 +215,26 @@ function read(st: State): Value {
 
   if (c === TOKEN_DICT) {
     advance(st);
-    const dictGet = intern(st, "dict-get");
+    if (peek(st) === "!") {
+      advance(st);
+      st.readStack.push(intern(st, "force"));
+    }
 
-    st.readStack.push(dictGet, readScalar(st), st.QUOTE);
+    st.readStack.push(intern(st, "dict-get"), readScalar(st), st.QUOTE);
     return read(st);
+  }
+
+  if (c === TOKEN_SPEC) {
+    const v = readScalar(st);
+
+    if (v.tag != TAG.ATOM) {
+      throw new Error("Illegal syntax, # must be followed by an atom");
+    } else if (v.atom === "#t") {
+      st.readStack.push(st.TRUE, st.QUOTE);
+      return read(st);
+    } else {
+      return v;
+    }
   }
 
   if (c === '"') {
@@ -379,7 +396,6 @@ function evaluate(st: State, env: ListHead, expr: Value) {
 
   switch (expr.tag) {
     case TAG.ATOM: {
-      if (expr.atom == "#t") return push(st, expr);
       const val = envFind(env, expr);
       switch (val.tag) {
         case TAG.CLOS:

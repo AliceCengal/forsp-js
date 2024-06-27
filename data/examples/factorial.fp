@@ -15,7 +15,7 @@
   (>g (<g Y)) >rec
 
   (>self >n
-    <if <n 0 eq 
+    <if <n 0 eq? 
       1
       (<n 1 - self <n *)
     endif
@@ -27,5 +27,5 @@
   4 factorial print
   5 factorial print
   6 factorial print
-  50 factorial print
+  ; 50 factorial print
 )
