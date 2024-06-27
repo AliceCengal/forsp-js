@@ -162,7 +162,7 @@ function isDirective(s: string) {
 }
 
 function isPunctuation(s: string) {
-  return isWhitespace(s) || isDirective(s) || PUNCTUATION.includes(s);
+  return isWhitespace(s) || PUNCTUATION.includes(s);
 }
 
 function skipWhitespaceAndComments(st: State): void {
@@ -203,14 +203,22 @@ function read(st: State): Value {
 
   if (c === TOKEN_PUSH) {
     advance(st);
-    st.readStack.push(st.PUSH, readScalar(st), st.QUOTE);
-    return read(st);
+    if (peek(st) === TOKEN_PUSH) {
+      st.inputPos--;
+    } else {
+      st.readStack.push(st.PUSH, readScalar(st), st.QUOTE);
+      return read(st);
+    }
   }
 
   if (c === TOKEN_POP) {
     advance(st);
-    st.readStack.push(st.POP, readScalar(st), st.QUOTE);
-    return read(st);
+    if (peek(st) === TOKEN_POP) {
+      st.inputPos--;
+    } else {
+      st.readStack.push(st.POP, readScalar(st), st.QUOTE);
+      return read(st);
+    }
   }
 
   if (c === TOKEN_DICT) {
@@ -531,17 +539,17 @@ const EXTRA_PRIMITIVES: Record<string, PrimFunc> = {
     const a = pop(st);
     push(st, makeNum(toNumber(a) + toNumber(b)));
   },
-  "b-nor": (st, env) => {
+  nand: (st, env) => {
     const b = pop(st);
     const a = pop(st);
-    push(st, makeNum(~(toNumber(a) | toNumber(b))));
+    push(st, makeNum(~(toNumber(a) & toNumber(b))));
   },
-  "b-shr": (st, env) => {
+  ">>": (st, env) => {
     const b = pop(st);
     const a = pop(st);
     push(st, makeNum(toNumber(a) >> toNumber(b)));
   },
-  "b-shl": (st, env) => {
+  "<<": (st, env) => {
     const b = pop(st);
     const a = pop(st);
     push(st, makeNum(toNumber(a) << toNumber(b)));

@@ -22,10 +22,16 @@
 
   ;; bitwise ops
 
-  ;; >b-nor is primitive
-  (dup b-nor swap dup b-nor b-nor)     >b-and
-  (b-nor dup b-nor)                    >b-or
-  (dup b-nor)                          >b-not
+  ; `nand` is primitive
+  (dup nand swap dup nand nand)        >|
+  (nand dup nand)                      >&
+  (dup nand)                           >~
+  (
+    >b >a 
+    <a <a <b nand nand 
+    <b <a <b nand nand 
+    nand
+  )                                    >^
 
   ;; List
 
