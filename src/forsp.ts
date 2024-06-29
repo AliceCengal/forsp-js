@@ -7,6 +7,7 @@ const DEBUG: boolean = false;
 const TOKEN_PUSH = "<";
 const TOKEN_POP = ">";
 const TOKEN_QUOTE = "'";
+const TOKEN_QUOTE_2 = ":";
 const TOKEN_DICT = "@";
 const TOKEN_SPEC = "#";
 
@@ -154,7 +155,7 @@ function isWhitespace(s: string) {
   return s.trim().length === 0;
 }
 
-const DIRECTIVES = [TOKEN_POP, TOKEN_PUSH, TOKEN_QUOTE];
+const DIRECTIVES = [TOKEN_POP, TOKEN_PUSH, TOKEN_QUOTE, TOKEN_QUOTE_2];
 const PUNCTUATION = ["(", ")", ";"];
 
 function isDirective(s: string) {
@@ -196,7 +197,7 @@ function read(st: State): Value {
   const c = peek(st);
   if (c === "") return null as any;
 
-  if (c === TOKEN_QUOTE) {
+  if (c === TOKEN_QUOTE || c === TOKEN_QUOTE_2) {
     advance(st);
     return st.QUOTE;
   }
@@ -562,6 +563,9 @@ const EXTRA_PRIMITIVES: Record<string, PrimFunc> = {
     } else {
       push(st, toNumber(a) > toNumber(b) ? st.TRUE : st.NIL);
     }
+  },
+  rand: (st, env) => {
+    push(st, makeNum(Math.random()));
   },
   import: (st, env) => {
     const filePath = pop(st);
