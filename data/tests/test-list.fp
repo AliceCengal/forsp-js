@@ -36,4 +36,8 @@
 
   1 enumerate$ 6 take$
   nil (cons) fold$ print;
+
+  1 enumerate$ 4 take$
+  6 enumerate$ 8 take$ 
+  join$ collect$ print;
 )

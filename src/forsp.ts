@@ -134,6 +134,17 @@ function toNumber(v: Value) {
   return v.tag === TAG.NUM ? v.num : NaN;
 }
 
+function listToArray(v: Value): any[] {
+  const res: any[] = [];
+  let pointer = v;
+  while (pointer.tag == TAG.PAIR) {
+    res.push(car(pointer));
+    pointer = cdr(pointer);
+  }
+
+  return res;
+}
+
 /**
  * READ
  */
@@ -310,10 +321,10 @@ function readString(st: State): Value {
  */
 
 function print(st: State, value: Value) {
-  st.io.std.printLine(printRecurse(value));
+  st.io.std.printLine(toString(value));
 }
 
-function printRecurse(value: Value): string {
+function toString(value: Value): string {
   switch (value.tag) {
     case TAG.NIL:
       return "()";
@@ -324,9 +335,9 @@ function printRecurse(value: Value): string {
     case TAG.STRING:
       return value.str;
     case TAG.PAIR:
-      return `(${printRecurse(value.pair.car)}${printListTail(value.pair.cdr)}`;
+      return `(${toString(value.pair.car)}${listTailToString(value.pair.cdr)}`;
     case TAG.CLOS:
-      return `CLOSURE<${printRecurse(value.clos.body)}>`;
+      return `CLOSURE<${toString(value.clos.body)}>`;
     case TAG.PRIM:
       return `PRIM<${value.prim.func.name || value.prim.func.toString()}>`;
     default:
@@ -334,14 +345,14 @@ function printRecurse(value: Value): string {
   }
 }
 
-function printListTail(value: Value): string {
+function listTailToString(value: Value): string {
   switch (value.tag) {
     case TAG.NIL:
       return ")";
     case TAG.PAIR:
-      return ` ${printRecurse(value.pair.car)}${printListTail(value.pair.cdr)}`;
+      return ` ${toString(value.pair.car)}${listTailToString(value.pair.cdr)}`;
     default:
-      return ` . ${printRecurse(value)})`;
+      return ` . ${toString(value)})`;
   }
 }
 
@@ -400,7 +411,7 @@ function pop(st: State) {
 
 function evaluate(st: State, env: ListHead, expr: Value) {
   if (DEBUG) {
-    st.io.std.printLine(`eval: ${printRecurse(expr)}`);
+    st.io.std.printLine(`eval: ${toString(expr)}`);
   }
 
   switch (expr.tag) {
@@ -425,8 +436,8 @@ function evaluate(st: State, env: ListHead, expr: Value) {
 
 function compute(st: State, env: ListHead, compSrc: Value) {
   if (DEBUG) {
-    st.io.std.printLine(`compute: ${printRecurse(compSrc)}`);
-    st.io.std.printLine(`stack: ${printRecurse(st.stack)}`);
+    st.io.std.printLine(`compute: ${toString(compSrc)}`);
+    st.io.std.printLine(`stack: ${toString(st.stack)}`);
   }
 
   let comp = compSrc;
@@ -476,7 +487,7 @@ const PRIMITIVES: Record<string, PrimFunc> = {
     push(st, cdr(pop(st)));
   },
   cswap: (st, env) => {
-    if (pop(st) == st.TRUE) {
+    if (pop(st) != st.NIL) {
       const a = pop(st);
       const b = pop(st);
       push(st, a);
@@ -519,53 +530,6 @@ const EXTRA_PRIMITIVES: Record<string, PrimFunc> = {
       pointer = cdr(pointer) as List;
     }
     throw new Error(`Cannot set unbound symbol "${key.atom}"`);
-  },
-  "*": (st, env) => {
-    const b = pop(st);
-    const a = pop(st);
-    push(st, makeNum(toNumber(a) * toNumber(b)));
-  },
-  "/": (st, env) => {
-    const b = pop(st);
-    const a = pop(st);
-    push(st, makeNum(toNumber(a) / toNumber(b)));
-  },
-  "-": (st, env) => {
-    const b = pop(st);
-    const a = pop(st);
-    push(st, makeNum(toNumber(a) - toNumber(b)));
-  },
-  "+": (st, env) => {
-    const b = pop(st);
-    const a = pop(st);
-    push(st, makeNum(toNumber(a) + toNumber(b)));
-  },
-  nand: (st, env) => {
-    const b = pop(st);
-    const a = pop(st);
-    push(st, makeNum(~(toNumber(a) & toNumber(b))));
-  },
-  ">>": (st, env) => {
-    const b = pop(st);
-    const a = pop(st);
-    push(st, makeNum(toNumber(a) >> toNumber(b)));
-  },
-  "<<": (st, env) => {
-    const b = pop(st);
-    const a = pop(st);
-    push(st, makeNum(toNumber(a) << toNumber(b)));
-  },
-  "gt?": (st, env) => {
-    const b = pop(st);
-    const a = pop(st);
-    if (a.tag === TAG.STRING && b.tag === TAG.STRING) {
-      push(st, a.str > b.str ? st.TRUE : st.NIL);
-    } else {
-      push(st, toNumber(a) > toNumber(b) ? st.TRUE : st.NIL);
-    }
-  },
-  rand: (st, env) => {
-    push(st, makeNum(Math.random()));
   },
   import: (st, env) => {
     const filePath = pop(st);
@@ -623,6 +587,95 @@ const EXTRA_PRIMITIVES: Record<string, PrimFunc> = {
       }
     }
   },
+  // "string-apply": (st, env) => {
+  //   const args = pop(st);
+  //   const method = pop(st);
+  //   const s = pop(st);
+
+  //   if (s.tag != TAG.STRING || method.tag != TAG.ATOM)
+  //     throw new Error("Bad argument for string-apply");
+
+  //   const s2 =
+  //     args.tag == TAG.ATOM
+  //       ? s.str[method.atom as any]
+  //       : (s.str[method.atom as any] as any)(...listToArray(args));
+
+  //   if (typeof s2 == "string") {
+  //     push(st, makeString(s2));
+  //   } else if (typeof s2 == "number") {
+  //     push(st, makeNum(s2));
+  //   }
+  // },
+};
+
+const MATH_PRIMITIVES: Record<string, PrimFunc> = {
+  "*": (st, env) => {
+    const b = pop(st);
+    const a = pop(st);
+    push(st, makeNum(toNumber(a) * toNumber(b)));
+  },
+  "/": (st, env) => {
+    const b = pop(st);
+    const a = pop(st);
+    push(st, makeNum(toNumber(a) / toNumber(b)));
+  },
+  "-": (st, env) => {
+    const b = pop(st);
+    const a = pop(st);
+    push(st, makeNum(toNumber(a) - toNumber(b)));
+  },
+  "+": (st, env) => {
+    const b = pop(st);
+    const a = pop(st);
+    push(st, makeNum(toNumber(a) + toNumber(b)));
+  },
+  "%": (st, env) => {
+    const b = pop(st);
+    const a = pop(st);
+    push(st, makeNum(toNumber(a) % toNumber(b)));
+  },
+  exp: (st, env) => {
+    const a = pop(st);
+    push(st, makeNum(Math.exp(toNumber(a))));
+  },
+  log: (st, env) => {
+    const a = pop(st);
+    push(st, makeNum(Math.log(toNumber(a))));
+  },
+  cos: (st, env) => {
+    const a = pop(st);
+    push(st, makeNum(Math.cos(toNumber(a))));
+  },
+  nand: (st, env) => {
+    const b = pop(st);
+    const a = pop(st);
+    push(st, makeNum(~(toNumber(a) & toNumber(b))));
+  },
+  ">>": (st, env) => {
+    const b = pop(st);
+    const a = pop(st);
+    push(st, makeNum(toNumber(a) >> toNumber(b)));
+  },
+  "<<": (st, env) => {
+    const b = pop(st);
+    const a = pop(st);
+    push(st, makeNum(toNumber(a) << toNumber(b)));
+  },
+  "gt?": (st, env) => {
+    const b = pop(st);
+    const a = pop(st);
+    if (a.tag === TAG.STRING && b.tag === TAG.STRING) {
+      push(st, a.str > b.str ? st.TRUE : st.NIL);
+    } else {
+      push(st, toNumber(a) > toNumber(b) ? st.TRUE : st.NIL);
+    }
+  },
+  rand: (st, env) => {
+    push(st, makeNum(Math.random()));
+  },
+  TAU: (st, env) => {
+    push(st, makeNum(Math.PI * 2));
+  },
 };
 
 /**
@@ -658,6 +711,10 @@ export function setup(adapter: IO, inputProgram: string): State {
   }
 
   for (let [k, v] of Object.entries(EXTRA_PRIMITIVES)) {
+    envDefinePrim(st, st.env, k, v);
+  }
+
+  for (let [k, v] of Object.entries(MATH_PRIMITIVES)) {
     envDefinePrim(st, st.env, k, v);
   }
 

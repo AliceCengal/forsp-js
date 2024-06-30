@@ -40,6 +40,19 @@
     <a <ab nand <b <ab nand nand
   )                                    >^
 
+  ;; Maths
+
+  (% 0 eq?)                            >divides?
+  (>b >a <a <b <a <b lt? cswap drop)   >max
+  (>b >a <a <b <a <b gt? cswap drop)   >min
+
+  (>ex log <ex * exp)                  >**
+  (TAU *)                              >TAU*
+
+  ;; `cos` is primitive
+  (0.25 TAU* - cos)                    >sin
+  (>x <x sin <x cos /)                 >tan
+
   (0 |)                                >trunc
 
   (
@@ -174,6 +187,8 @@
 
   ((rand))                             >rand$
 
+  (>$2 >$1 (($1) ($2) or?))            >join$
+
   (
     >n >stream$
     (
@@ -184,6 +199,14 @@
       ) and?
     )
   )                                    >take$
+
+  (
+    >fn? >stream$
+    (
+      stream$ >item
+      (<item fn?) (<item) and?
+    )
+  )                                    >take-while$
 
   (
     >n >stream$ <n
