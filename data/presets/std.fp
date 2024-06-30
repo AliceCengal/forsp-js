@@ -182,30 +182,21 @@
 
   ;; Stream constructors and higher order functions
 
-  ; enumerate
   (>n (<n ('n <n 1 +) set!))           >enumerate$
-
   ((rand))                             >rand$
-
   (>$2 >$1 (($1) ($2) or?))            >join$
 
   (
-    >n >stream$
+    >n >$
     (
-      (<n 0 eq? not?)
-      (
-        stream$
-        ('n n 1 -) set!
-      ) and?
+      (<n 0 gt?)
+      ($ ('n n 1 -) set!) and?
     )
   )                                    >take$
 
   (
-    >fn? >stream$
-    (
-      stream$ >item
-      (<item fn?) (<item) and?
-    )
+    >fn? >$
+    ($ >x (<x fn?) (<x) and?)
   )                                    >take-while$
 
   (
@@ -221,27 +212,22 @@
   )                                    >drop$
 
   (
-    >fn >stream$
-    (
-      stream$ >item
-      (<item null? not?)
-      (<item fn) and?
-    )
+    >fn >$
+    ($ >x (<x null? not?) (<x fn) and?)
   )                                    >map$
 
   (
-    >fn >stream$
+    >fn? >$
     (
-      >self
-      stream$ >item
-      if (<item null?)
+      >self $ >x
+      if (<x null?)
         nil
-      elseif (<item fn not?)
+      elseif (<x fn? not?)
         (self)
-        (<item)
+        (<x)
       endif
     ) rec
-  ) >filter$
+  )                                    >filter$
 
   ; fold
   (
@@ -268,7 +254,7 @@
         (<item fn self)
       endif
     ) rec force
-  ) >each$
+  )                                    >each$
 
   (
     >stream$
