@@ -185,6 +185,14 @@
   (>n (<n ('n <n 1 +) set!))           >enumerate$
   ((rand))                             >rand$
   (>$2 >$1 (($1) ($2) or?))            >join$
+  (
+    >$2 >$1 
+    (
+      $1 >s1 $2 >s2 
+      (s1 s2 and?)
+      (s1 s2 cons) and?
+    )
+  )                                    >zip$
 
   (
     >n >$

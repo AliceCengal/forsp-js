@@ -9,7 +9,6 @@ const TOKEN_POP = ">";
 const TOKEN_QUOTE = "'";
 const TOKEN_QUOTE_2 = ":";
 const TOKEN_DICT = "@";
-const TOKEN_SPEC = "#";
 
 const TAG = {
   NIL: 0,
@@ -242,19 +241,6 @@ function read(st: State): Value {
 
     st.readStack.push(intern(st, "dict-get"), readScalar(st), st.QUOTE);
     return read(st);
-  }
-
-  if (c === TOKEN_SPEC) {
-    const v = readScalar(st);
-
-    if (v.tag != TAG.ATOM) {
-      throw new Error("Illegal syntax, # must be followed by an atom");
-    } else if (v.atom === "#t") {
-      st.readStack.push(st.TRUE, st.QUOTE);
-      return read(st);
-    } else {
-      return v;
-    }
   }
 
   if (c === '"') {
@@ -511,6 +497,9 @@ const EXTRA_PRIMITIVES: Record<string, PrimFunc> = {
   },
   env: (st, env) => {
     push(st, env.head);
+  },
+  "#t": (st, env) => {
+    push(st, st.TRUE);
   },
   "set!": (st, env) => {
     const clos = pop(st);
