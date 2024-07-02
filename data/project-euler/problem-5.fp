@@ -3,7 +3,10 @@
 
   (>n '(2) 3
     (>self >x >list
-      <list iter$ (>p <x <p divides?) filter$ collect$ null? >is-prime?
+      <list iter$ 
+      (>p <x <p divides?) filter$ 
+      collect$ null? >is-prime?
+      
       <list
       if (is-prime?)
         (<x cons)
@@ -20,9 +23,8 @@
     <n primes-upto >primes
     primes iter$
     (>p <p <n log <p log / floor ** 0.000000001 - ceil) map$
-    ; collect$
     (*) reduce$
-  ) >solve-2
-  20 primes-upto print;
-  20 solve-2 print
+  ) >solve
+
+  20 solve print
 )
