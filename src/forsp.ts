@@ -395,7 +395,7 @@ function pop(st: State) {
  * Eval
  */
 
-function evaluate(st: State, env: ListHead, expr: Value) {
+function evaluate(st: State, env: ListHead, expr: Value): Value | void {
   if (DEBUG) {
     st.io.std.printLine(`eval: ${toString(expr)}`);
   }
@@ -405,7 +405,7 @@ function evaluate(st: State, env: ListHead, expr: Value) {
       const val = envFind(env, expr);
       switch (val.tag) {
         case TAG.CLOS:
-          return compute(st, val.clos.env, val.clos.body);
+          return val;
         case TAG.PRIM:
           return val.prim.func(st, env);
         default:
@@ -420,28 +420,36 @@ function evaluate(st: State, env: ListHead, expr: Value) {
   }
 }
 
-function compute(st: State, env: ListHead, compSrc: Value) {
+type Frame = [Value, ListHead];
+
+function compute(st: State, envSrc: ListHead, compSrc: Value) {
   if (DEBUG) {
     st.io.std.printLine(`compute: ${toString(compSrc)}`);
     st.io.std.printLine(`stack: ${toString(st.stack)}`);
   }
 
-  let comp = compSrc;
-  while (comp != st.NIL) {
-    const cmd = car(comp);
-    comp = cdr(comp);
+  const stack: Frame[] = [[compSrc, envSrc]];
+  while (stack.length) {
+    let [comp, env] = stack.pop()!;
+    while (comp != st.NIL) {
+      const cmd = car(comp);
+      comp = cdr(comp);
 
-    if (cmd == st.QUOTE) {
-      if (comp == st.NIL) {
-        throw new Error("Expected data following quote form");
+      if (cmd == st.QUOTE) {
+        if (comp == st.NIL) {
+          throw new Error("Expected data following quote form");
+        }
+
+        push(st, car(comp));
+        comp = cdr(comp);
+        continue;
       }
 
-      push(st, car(comp));
-      comp = cdr(comp);
-      continue;
+      const conti = evaluate(st, env, cmd);
+      if (conti && conti.tag == TAG.CLOS) {
+        stack.push([conti.clos.body, conti.clos.env]);
+      }
     }
-
-    evaluate(st, env, cmd);
   }
 }
 
