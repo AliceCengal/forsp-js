@@ -447,7 +447,9 @@ function compute(st: State, envSrc: ListHead, compSrc: Value) {
 
       const conti = evaluate(st, env, cmd);
       if (conti && conti.tag == TAG.CLOS) {
+        stack.push([comp, env]);
         stack.push([conti.clos.body, conti.clos.env]);
+        break;
       }
     }
   }
