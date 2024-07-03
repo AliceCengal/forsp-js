@@ -95,6 +95,19 @@
   ; -- divides? max min ** TAU TAU* sin cos tan 
   ; -- log exp floor ceil rand
 
+  ; nil is overloaded as heck in this framework, so you probably
+  ; shouldn't use it to represent emptiness in your data
+  ; you can use 1 and 0 as an alternate boolean with `zero?`
+  ; as the test, or use symbols
+
+  (
+    :adidap        0
+    :nykee         5
+    :pumer         :is-discontinued
+  ) dict >inventory
+  
+  (:is-discontinued eq?) >is-discontinued?
+
   ; list operations
   ; -- list? list length
 

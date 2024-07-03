@@ -42,6 +42,7 @@
 
   ;; Maths
 
+  (0 eq?)                              >zero?
   (% 0 eq?)                            >divides?
   (>b >a <a <b <a <b lt? cswap drop)   >max
   (>b >a <a <b <a <b gt? cswap drop)   >min
