@@ -9,5 +9,5 @@
   ) >solve
 
   ; 10 solve print; 23
-   1000 solve print;
+  1000 solve print;
 )

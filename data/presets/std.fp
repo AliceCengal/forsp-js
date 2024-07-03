@@ -4,7 +4,7 @@
   (>_)                                 >drop
   (>x >y <x <y)                        >swap
   (>f (>x (<x x) f) dup force)         >Y
-  (>g (<g Y))                          >rec
+  (>f ((>x (<x x) f) >x <x x))         >rec
 
   ;; Boolean logic
 
@@ -20,7 +20,7 @@
   (tag 3 eq?)                          >pair?
   (tag 4 eq?)                          >closure?
 
-  ((>x x cswap >_ >x x))               >if
+  ((>c c cswap >_ >x x))               >if
   (>f >t >c >fn <f <t <c fn)           >endif
   ((>c >t >f (<f <t <c if >x x) endif)) >elseif
 
