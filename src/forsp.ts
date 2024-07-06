@@ -117,11 +117,11 @@ function caar(value: Value): Value {
   return value.pair.car.pair.car;
 }
 
-function cadr(value: Value): Value {
-  if (value.tag !== TAG.PAIR || value.pair.car.tag !== TAG.PAIR)
-    throw new Error("Cannot cadr a not Pair Pair");
-  return value.pair.car.pair.cdr;
-}
+// function cadr(value: Value): Value {
+//   if (value.tag !== TAG.PAIR || value.pair.car.tag !== TAG.PAIR)
+//     throw new Error("Cannot cadr a not Pair Pair");
+//   return value.pair.car.pair.cdr;
+// }
 
 function valueEq(v1: Value, v2: Value) {
   return (
@@ -133,16 +133,15 @@ function toNumber(v: Value) {
   return v.tag === TAG.NUM ? v.num : NaN;
 }
 
-function listToArray(v: Value): any[] {
-  const res: any[] = [];
-  let pointer = v;
-  while (pointer.tag == TAG.PAIR) {
-    res.push(car(pointer));
-    pointer = cdr(pointer);
-  }
-
-  return res;
-}
+// function listToArray(v: Value): any[] {
+//   const res: any[] = [];
+//   let pointer = v;
+//   while (pointer.tag == TAG.PAIR) {
+//     res.push(car(pointer));
+//     pointer = cdr(pointer);
+//   }
+//   return res;
+// }
 
 /**
  * READ
@@ -165,12 +164,12 @@ function isWhitespace(s: string) {
   return s.trim().length === 0;
 }
 
-const DIRECTIVES = [TOKEN_POP, TOKEN_PUSH, TOKEN_QUOTE, TOKEN_QUOTE_2];
+// const DIRECTIVES = [TOKEN_POP, TOKEN_PUSH, TOKEN_QUOTE, TOKEN_QUOTE_2];
 const PUNCTUATION = ["(", ")", ";"];
 
-function isDirective(s: string) {
-  return DIRECTIVES.includes(s);
-}
+// function isDirective(s: string) {
+//   return DIRECTIVES.includes(s);
+// }
 
 function isPunctuation(s: string) {
   return isWhitespace(s) || PUNCTUATION.includes(s);
@@ -472,21 +471,21 @@ const PRIMITIVES: Record<string, PrimFunc> = {
     const v = pop(st);
     envDefine(env, k, v);
   },
-  "eq?": (st, env) => {
+  "eq?": (st, _) => {
     push(st, valueEq(pop(st), pop(st)) ? st.TRUE : st.NIL);
   },
-  cons: (st, env) => {
+  cons: (st, _) => {
     const a = pop(st);
     const b = pop(st);
     push(st, makePair(a, b));
   },
-  car: (st, env) => {
+  car: (st, _) => {
     push(st, car(pop(st)));
   },
-  cdr: (st, env) => {
+  cdr: (st, _) => {
     push(st, cdr(pop(st)));
   },
-  cswap: (st, env) => {
+  cswap: (st, _) => {
     if (pop(st) != st.NIL) {
       const a = pop(st);
       const b = pop(st);
@@ -494,25 +493,25 @@ const PRIMITIVES: Record<string, PrimFunc> = {
       push(st, b);
     }
   },
-  tag: (st, env) => {
+  tag: (st, _) => {
     push(st, makeNum(pop(st).tag));
   },
-  read: (st, env) => {
+  read: (st, _) => {
     push(st, read(st));
   },
-  print: (st, env) => {
+  print: (st, _) => {
     print(st, pop(st));
   },
 };
 
 const EXTRA_PRIMITIVES: Record<string, PrimFunc> = {
-  stack: (st, env) => {
+  stack: (st, _) => {
     push(st, st.stack);
   },
   env: (st, env) => {
     push(st, env.head);
   },
-  "#t": (st, env) => {
+  "#t": (st, _) => {
     push(st, st.TRUE);
   },
   "set!": (st, env) => {
@@ -612,59 +611,59 @@ const EXTRA_PRIMITIVES: Record<string, PrimFunc> = {
 };
 
 const MATH_PRIMITIVES: Record<string, PrimFunc> = {
-  "*": (st, env) => {
+  "*": (st, _) => {
     const b = pop(st);
     const a = pop(st);
     push(st, makeNum(toNumber(a) * toNumber(b)));
   },
-  "/": (st, env) => {
+  "/": (st, _) => {
     const b = pop(st);
     const a = pop(st);
     push(st, makeNum(toNumber(a) / toNumber(b)));
   },
-  "-": (st, env) => {
+  "-": (st, _) => {
     const b = pop(st);
     const a = pop(st);
     push(st, makeNum(toNumber(a) - toNumber(b)));
   },
-  "+": (st, env) => {
+  "+": (st, _) => {
     const b = pop(st);
     const a = pop(st);
     push(st, makeNum(toNumber(a) + toNumber(b)));
   },
-  "%": (st, env) => {
+  "%": (st, _) => {
     const b = pop(st);
     const a = pop(st);
     push(st, makeNum(toNumber(a) % toNumber(b)));
   },
-  exp: (st, env) => {
+  exp: (st, _) => {
     const a = pop(st);
     push(st, makeNum(Math.exp(toNumber(a))));
   },
-  log: (st, env) => {
+  log: (st, _) => {
     const a = pop(st);
     push(st, makeNum(Math.log(toNumber(a))));
   },
-  cos: (st, env) => {
+  cos: (st, _) => {
     const a = pop(st);
     push(st, makeNum(Math.cos(toNumber(a))));
   },
-  nand: (st, env) => {
+  nand: (st, _) => {
     const b = pop(st);
     const a = pop(st);
     push(st, makeNum(~(toNumber(a) & toNumber(b))));
   },
-  ">>": (st, env) => {
+  ">>": (st, _) => {
     const b = pop(st);
     const a = pop(st);
     push(st, makeNum(toNumber(a) >> toNumber(b)));
   },
-  "<<": (st, env) => {
+  "<<": (st, _) => {
     const b = pop(st);
     const a = pop(st);
     push(st, makeNum(toNumber(a) << toNumber(b)));
   },
-  "gt?": (st, env) => {
+  "gt?": (st, _) => {
     const b = pop(st);
     const a = pop(st);
     if (a.tag === TAG.STRING && b.tag === TAG.STRING) {
@@ -673,10 +672,10 @@ const MATH_PRIMITIVES: Record<string, PrimFunc> = {
       push(st, toNumber(a) > toNumber(b) ? st.TRUE : st.NIL);
     }
   },
-  rand: (st, env) => {
+  rand: (st, _) => {
     push(st, makeNum(Math.random()));
   },
-  TAU: (st, env) => {
+  TAU: (st, _) => {
     push(st, makeNum(Math.PI * 2));
   },
 };
