@@ -296,7 +296,7 @@ function readString(st: State): Value {
     c = peek(st);
   }
   let str = st.input.slice(start, st.inputPos);
-  str = JSON.parse(`["${str}"]`)[0]; // SORRY
+  str = JSON.parse(`"${str}"`); // SORRY
   advance(st);
   return makeString(str);
 }
