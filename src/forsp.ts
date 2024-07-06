@@ -18,6 +18,7 @@ const TAG = {
   CLOS: 4,
   PRIM: 5,
   STRING: 6,
+  MACRO: 7,
 } as const;
 
 type Nil = { tag: 0 };
@@ -33,7 +34,8 @@ type Value =
   | { tag: 6; str: string }
   | Pair
   | { tag: 4; clos: { body: Value; env: ListHead } }
-  | { tag: 5; prim: { func: PrimFunc } };
+  | { tag: 5; prim: { func: PrimFunc } }
+  | { tag: 7; body: Value };
 
 export type IO = {
   std: {
@@ -89,6 +91,10 @@ function makeClos(body: Value, env: List): Value {
 
 function makePrim(func: PrimFunc): Value {
   return { tag: 5, prim: { func } };
+}
+
+function makeMacro(body: Value): Value {
+  return { tag: 7, body };
 }
 
 function intern(st: State, atom_buf: string): Value {
@@ -165,7 +171,7 @@ function isWhitespace(s: string) {
 }
 
 // const DIRECTIVES = [TOKEN_POP, TOKEN_PUSH, TOKEN_QUOTE, TOKEN_QUOTE_2];
-const PUNCTUATION = ["(", ")", ";"];
+const PUNCTUATION = ["(", ")", "[", "]", ";"];
 
 // function isDirective(s: string) {
 //   return DIRECTIVES.includes(s);
@@ -247,6 +253,12 @@ function read(st: State): Value {
     return readString(st);
   }
 
+  if (c === "[") {
+    advance(st);
+    st.readStack.push(intern(st, "make-macro"), readList(st));
+    return read(st);
+  }
+
   if (c === "(") {
     advance(st);
     return readList(st);
@@ -275,7 +287,7 @@ function readList(st: State): Value {
   if (!st.readStack.length) {
     skipWhitespaceAndComments(st);
     const c = peek(st);
-    if (c === ")") {
+    if (c === ")" || c === "]") {
       advance(st);
       return st.NIL;
     }
@@ -325,6 +337,8 @@ function toString(value: Value): string {
       return `CLOSURE<${toString(value.clos.body)}>`;
     case TAG.PRIM:
       return `PRIM<${value.prim.func.name || value.prim.func.toString()}>`;
+    case TAG.MACRO:
+      return `MACRO<${toString(value.body)}>`;
     default:
       return "UNKNOWN_VALUE";
   }
@@ -404,6 +418,7 @@ function evaluate(st: State, env: ListHead, expr: Value): Value | void {
       const val = envFind(env, expr);
       switch (val.tag) {
         case TAG.CLOS:
+        case TAG.MACRO:
           return val;
         case TAG.PRIM:
           return val.prim.func(st, env);
@@ -452,6 +467,10 @@ function compute(st: State, envSrc: ListHead, compSrc: Value) {
         }
 
         stack.push([conti.clos.body, conti.clos.env]);
+        break;
+      } else if (conti && conti.tag == TAG.MACRO) {
+        stack.push([comp, env]);
+        stack.push([conti.body, env]);
         break;
       }
     }
@@ -532,6 +551,12 @@ const EXTRA_PRIMITIVES: Record<string, PrimFunc> = {
       pointer = cdr(pointer) as List;
     }
     throw new Error(`Cannot set unbound symbol "${key.atom}"`);
+  },
+  "make-macro": (st, _) => {
+    const clos = pop(st);
+    if (clos.tag !== TAG.CLOS)
+      throw new Error(`"make-macro" expects operand to be closure`);
+    push(st, makeMacro(clos.clos.body));
   },
   import: (st, env) => {
     const filePath = pop(st);
