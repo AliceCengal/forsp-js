@@ -30,7 +30,7 @@ function main(argv: string[]) {
 
   const adapter: IO = {
     std: {
-      readLine: function (): string {
+      readLine: function (): Promise<string> {
         throw new Error("Function not implemented.");
       },
       printLine: function (str?: string): void {
@@ -41,9 +41,16 @@ function main(argv: string[]) {
       },
     },
     file: {
-      read: function (filePath: string): string {
-        const importRoot =
+      read: async function (
+        filePath: string,
+        referencePath?: string
+      ): Promise<string> {
+        let importRoot =
           argv[0] === "--raw" ? process.cwd() : path.join(argv[0], "..");
+
+        if (referencePath) {
+          importRoot = path.join(importRoot, referencePath, "..");
+        }
 
         let importPath = path.join(importRoot, filePath);
 

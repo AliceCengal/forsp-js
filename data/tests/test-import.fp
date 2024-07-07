@@ -16,4 +16,11 @@
   test-dict-import 
   ; <h print ; should throw error
   ; <std print ; should throw error
+
+  (
+    "./test-import/test-lib" import >lib
+    <lib print
+  ) >test-nested-import
+
+  test-nested-import 
 )

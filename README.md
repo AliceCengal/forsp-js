@@ -58,7 +58,7 @@ the state of the Forsp program execution. The `State` object is not part of the
 public interface, so I can't guarantee that its structure will stay the same
 as this project evolves.
 
-`function run(st: State)`. Takes the object returned by `setup` and begins
+`async function run(st: State)`. Takes the object returned by `setup` and begins
 execution of the program
 
-`type IO`. An adapter object that holds the IO functions used by the interpreter.
+`type IO`. Interface for an adapter object that holds the IO functions used by the interpreter.

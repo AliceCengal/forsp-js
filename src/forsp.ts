@@ -25,7 +25,7 @@ type Atom = { tag: 1; atom: string };
 type Pair = { tag: 3; pair: { car: Value; cdr: Value } };
 type List = Pair | Nil;
 type ListHead = { head: List };
-type PrimFunc = (st: State, env: ListHead) => void;
+type PrimFunc = (st: State, env: ListHead) => Promise<void> | void;
 type Value =
   | Nil
   | Atom
@@ -37,12 +37,12 @@ type Value =
 
 export type IO = {
   std: {
-    readLine: () => string;
+    readLine: () => Promise<string>;
     printLine: (str?: string) => void;
     printError: (str?: string) => void;
   };
   file: {
-    read: (filePath: string) => string;
+    read: (filePath: string, referencePath?: string) => Promise<string>;
   };
 };
 
@@ -404,9 +404,8 @@ function evaluate(st: State, env: ListHead, expr: Value): Value | void {
       const val = envFind(env, expr);
       switch (val.tag) {
         case TAG.CLOS:
-          return val;
         case TAG.PRIM:
-          return val.prim.func(st, env);
+          return val;
         default:
           return push(st, val);
       }
@@ -421,7 +420,7 @@ function evaluate(st: State, env: ListHead, expr: Value): Value | void {
 
 type Frame = [Value, ListHead];
 
-function compute(st: State, envSrc: ListHead, compSrc: Value) {
+async function compute(st: State, envSrc: ListHead, compSrc: Value) {
   if (DEBUG) {
     st.io.std.printLine(`compute: ${toString(compSrc)}`);
     st.io.std.printLine(`stack: ${toString(st.stack)}`);
@@ -453,6 +452,8 @@ function compute(st: State, envSrc: ListHead, compSrc: Value) {
 
         stack.push([conti.clos.body, conti.clos.env]);
         break;
+      } else if (conti && conti.tag == TAG.PRIM) {
+        await conti.prim.func(st, env);
       }
     }
   }
@@ -514,10 +515,10 @@ const EXTRA_PRIMITIVES: Record<string, PrimFunc> = {
   "#t": (st, _) => {
     push(st, st.TRUE);
   },
-  "set!": (st, env) => {
+  "set!": async (st, env) => {
     const clos = pop(st);
     if (clos.tag !== TAG.CLOS) throw new Error("Operand must be a closure");
-    compute(st, clos.clos.env, clos.clos.body);
+    await compute(st, clos.clos.env, clos.clos.body);
     const val = pop(st);
     const key = pop(st);
     if (key.tag !== TAG.ATOM) throw new Error("Operand must contain an atom");
@@ -533,29 +534,21 @@ const EXTRA_PRIMITIVES: Record<string, PrimFunc> = {
     }
     throw new Error(`Cannot set unbound symbol "${key.atom}"`);
   },
-  import: (st, env) => {
-    const filePath = pop(st);
-    if (filePath.tag !== TAG.STRING) {
-      throw new Error("import expects a string operand");
-    }
-
+  import: async (st, env) => {
     const oriEnv = env.head;
+    const [importPath, refPath] = extractImportPath(st, env);
     try {
-      let importPath = filePath.str;
-      if (!importPath.endsWith(".fp")) {
-        importPath = `${importPath}.fp`;
-      }
-      const module = st.io.file.read(importPath);
+      const module = await st.io.file.read(importPath, refPath);
 
       st.input = module;
       st.inputPos = 0;
       const moduleObj = read(st);
 
-      compute(st, env, moduleObj);
+      await compute(st, env, moduleObj);
 
       push(st, env.head);
     } catch (err) {
-      st.io.std.printError(`Failed to import module "${filePath.str}"`);
+      st.io.std.printError(`Failed to import module "${importPath}"`);
       if (err instanceof Error) {
         st.io.std.printError(err.message);
       }
@@ -563,27 +556,19 @@ const EXTRA_PRIMITIVES: Record<string, PrimFunc> = {
       env.head = oriEnv;
     }
   },
-  "import*": (st, env) => {
-    const filePath = pop(st);
-    if (filePath.tag !== TAG.STRING) {
-      throw new Error("import* expects a string operand");
-    }
-
+  "import*": async (st, env) => {
     const oriEnv = env.head;
+    const [importPath, refPath] = extractImportPath(st, env);
     try {
-      let importPath = filePath.str;
-      if (!importPath.endsWith(".fp")) {
-        importPath = `${importPath}.fp`;
-      }
-      const module = st.io.file.read(importPath);
+      const module = await st.io.file.read(importPath, refPath);
 
       st.input = module;
       st.inputPos = 0;
       const moduleObj = read(st);
-      compute(st, env, moduleObj);
+      await compute(st, env, moduleObj);
     } catch (err) {
       env.head = oriEnv;
-      st.io.std.printError(`Failed to import module "${filePath.str}"`);
+      st.io.std.printError(`Failed to import module "${importPath}"`);
       if (err instanceof Error) {
         st.io.std.printError(err.message);
       }
@@ -680,6 +665,27 @@ const MATH_PRIMITIVES: Record<string, PrimFunc> = {
   },
 };
 
+function extractImportPath(st: State, env: ListHead) {
+  const filePath = pop(st);
+  if (filePath.tag !== TAG.STRING) {
+    throw new Error("import expects a string operand");
+  }
+
+  const scriptPath = intern(st, "__script_path") as Atom;
+  let importPath = filePath.str;
+  let refPath = "";
+
+  if (!importPath.endsWith(".fp")) {
+    importPath = `${importPath}.fp`;
+  }
+  try {
+    refPath = (envFind(env, scriptPath) as Atom).atom;
+  } catch (err) {}
+
+  envDefine(env, scriptPath, makeAtom(importPath));
+  return [importPath, refPath];
+}
+
 /**
  * Interpreter
  */
@@ -723,10 +729,10 @@ export function setup(adapter: IO, inputProgram: string): State {
   return st;
 }
 
-export function run(st: State) {
+export async function run(st: State) {
   const obj = read(st);
   try {
-    compute(st, st.env, obj);
+    await compute(st, st.env, obj);
   } catch (err) {
     if (err instanceof Error) {
       st.io.std.printError(err.message);
