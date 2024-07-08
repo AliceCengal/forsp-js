@@ -158,7 +158,7 @@
   ; join$ first consumes the first stream operand until it terminates,
   ; then starts consuming the second stream operand
 
-  '(1 2 3) iter$ rand$ join$
+  '(1 2 3) iter$ rand$ join$ 6 take$ collect$ print;
 
   ; zip$ will terminate when one of its operand stream terminates
 

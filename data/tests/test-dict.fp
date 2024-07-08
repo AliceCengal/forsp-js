@@ -27,19 +27,5 @@
   dup print;
   @foo print;
   
-  (
-    100 >balance
-    (
-      <balance swap - >new-balance
-       ; env ('balance new-balance) dict-set env-set
-      ('balance new-balance) set!
-      <new-balance
-    )
-  ) >make-withdraw
-
-  make-withdraw >withdraw
-
-  25 withdraw print;
-  17 withdraw print;
   stack print;
 )

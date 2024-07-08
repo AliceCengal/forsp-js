@@ -103,17 +103,6 @@
     ) rec force
   )                                    >length
 
-  (
-    >list
-    (
-      (<list null? not?)
-      (
-        <list car 
-        ('list <list cdr) set!
-      ) and?
-    )
-  )                                    >iter$
-
   ; sort
 
   ; explode [ list[n] -> n[ val ] ]
@@ -179,98 +168,98 @@
 
   ;; String
 
-  (tag 6 eq?)                           >string?
+  (tag 6 eq?)                          >string?
 
   ;; Stream constructors and higher order functions
 
-  (>n (<n ('n <n 1 +) set!))           >enumerate$
-  ((rand))                             >rand$
-  (>$2 >$1 (($1) ($2) or?))            >join$
-  (
-    >$2 >$1 
-    (
-      $1 >s1 $2 >s2 
-      (s1 s2 and?)
-      (s1 s2 cons) and?
-    )
-  )                                    >zip$
+  (>self >n 
+    (<n 1 + self) <n cons
+  ) rec                                >enumerate$
 
-  (
-    >n >$
-    (
-      (<n 0 gt?)
-      ($ ('n n 1 -) set!) and?
-    )
-  )                                    >take$
+  (>self
+    (self) rand cons
+  ) rec                                >rand$
 
-  (
-    >fn? >$
-    ($ >x (<x fn?) (<x) and?)
-  )                                    >take-while$
+  <car                                 >car$
+  (cdr force)                          >cdr$
+  (>$ <$ cdr$ <$ car$)                 >next$
 
-  (
-    >n >stream$ <n
+  (>self >list
+    (<list)
+    ((<list cdr self) <list car cons) and?
+  ) rec                                >iter$
+
+  (>self >n >$
+    (<$) (<n 0 gt?) and?
+    ((<$ cdr$ <n 1 - self) <$ car$ cons) and?
+  ) rec                                >take$
+
+  (>self >fn >$
+    (<$) (<$ car$ fn) and?
+    ((<$ cdr$ <fn self) <$ car$ cons) and?
+  ) rec                                >take-while$
+
+  (>self >$2 >$1 
+    if (<$1)
+      (($1 cdr$ $2 self) $1 car$ cons)
+      $2
+    endif
+  ) rec                                >join$
+
+  (>self >$2 >$1
+    ($1 $2 and?)
     (
-      >self >n
-      if (<n 0 eq?)
-        ()
-        (stream$ drop <n 1 - self)
+      (<$1 cdr$ <$2 cdr$ self) 
+      $2 car$ $1 car$ cons 
+      cons
+    ) and?
+  ) rec                                >zip$
+
+  (>self >n >$
+    if (<n 0 gt? (<$) and?)
+      (<$ cdr$ <n 1 - self)
+      (<$)
+    endif
+  ) rec                                >drop$
+
+  (>self >fn >$
+    <$
+    ((<$ cdr$ <fn self) <$ car$ fn cons) and?
+  ) rec                                >map$
+
+  (>self >fn >$
+    (<$)
+    (
+      <$ car$ >it
+      if (<it fn)
+        ((<$ cdr$ <fn self) <it cons)
+        (<$ cdr$ <fn self)
       endif
-    ) rec force
-    <stream$
-  )                                    >drop$
+    ) and?
+  ) rec                                >filter$
 
-  (
-    >fn >$
-    ($ >x (<x null? not?) (<x fn) and?)
-  )                                    >map$
+  (>self >fn >val >$
+    if (<$)
+      (<$ cdr$ val <$ car$ fn <fn self)
+      (val)
+    endif
+  ) rec                                >fold$
 
-  (
-    >fn? >$
-    (
-      >self $ >x
-      if (<x null?)
-        nil
-      elseif (<x fn? not?)
-        (self)
-        (<x)
-      endif
-    ) rec
-  )                                    >filter$
+  (>fn next$ <fn fold$)                >reduce$
 
-  ; fold
-  (
-    >fn >init >stream$ <init
-    (
-      >self >val stream$ >item
-      if (<item null?)
-        (val)
-        (val <item fn self)
-      endif
-    ) rec force
-  )                                    >fold$
+  (>self >fn >$
+    if (<$)
+      (
+        <$ car$ fn
+        <$ cdr$ <fn self
+      )
+      ()
+    endif
+  ) rec                                >each$
 
-  ; foldr
+  (>self >$
+    (<$)
+    (<$ cdr$ self <$ car$ cons) and?
+  ) rec                                >collect$
 
-  (>fn >$ <$ $ <fn fold$)              >reduce$
-
-  (
-    >fn >stream$
-    (
-      >self stream$ >item
-      if (<item null?)
-        ()
-        (<item fn self)
-      endif
-    ) rec force
-  )                                    >each$
-
-  (
-    >stream$
-    (
-      >self stream$ >item
-      (<item null? not?)
-      (self <item cons) and?
-    ) rec force
-  )                                    >collect$
 )

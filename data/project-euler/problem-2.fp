@@ -2,12 +2,10 @@
   "../presets/std" import*
 
   (
-    1 >a 1 >b
-    (
-      <b
-      (:b <a <b +) set!
-      (:a <b <a -) set!
-    )
+    1 1
+    (>self >a >b
+      (<b <a + <b self) <b cons
+    ) rec force
   ) >fibonacci$
 
   fibonacci$ 

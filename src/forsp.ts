@@ -111,11 +111,11 @@ function cdr(value: Value): Value {
   return value.pair.cdr;
 }
 
-function caar(value: Value): Value {
-  if (value.tag !== TAG.PAIR || value.pair.car.tag !== TAG.PAIR)
-    throw new Error("Cannot caar a not Pair Pair");
-  return value.pair.car.pair.car;
-}
+// function caar(value: Value): Value {
+//   if (value.tag !== TAG.PAIR || value.pair.car.tag !== TAG.PAIR)
+//     throw new Error("Cannot caar a not Pair Pair");
+//   return value.pair.car.pair.car;
+// }
 
 // function cadr(value: Value): Value {
 //   if (value.tag !== TAG.PAIR || value.pair.car.tag !== TAG.PAIR)
@@ -515,25 +515,25 @@ const EXTRA_PRIMITIVES: Record<string, PrimFunc> = {
   "#t": (st, _) => {
     push(st, st.TRUE);
   },
-  "set!": async (st, env) => {
-    const clos = pop(st);
-    if (clos.tag !== TAG.CLOS) throw new Error("Operand must be a closure");
-    await compute(st, clos.clos.env, clos.clos.body);
-    const val = pop(st);
-    const key = pop(st);
-    if (key.tag !== TAG.ATOM) throw new Error("Operand must contain an atom");
+  // "set!": async (st, env) => {
+  //   const clos = pop(st);
+  //   if (clos.tag !== TAG.CLOS) throw new Error("Operand must be a closure");
+  //   await compute(st, clos.clos.env, clos.clos.body);
+  //   const val = pop(st);
+  //   const key = pop(st);
+  //   if (key.tag !== TAG.ATOM) throw new Error("Operand must contain an atom");
 
-    let pointer = env.head;
-    while (pointer != st.NIL) {
-      if (caar(pointer) == key) {
-        let pair = car(pointer) as Pair;
-        pair.pair.cdr = val;
-        return;
-      }
-      pointer = cdr(pointer) as List;
-    }
-    throw new Error(`Cannot set unbound symbol "${key.atom}"`);
-  },
+  //   let pointer = env.head;
+  //   while (pointer != st.NIL) {
+  //     if (caar(pointer) == key) {
+  //       let pair = car(pointer) as Pair;
+  //       pair.pair.cdr = val;
+  //       return;
+  //     }
+  //     pointer = cdr(pointer) as List;
+  //   }
+  //   throw new Error(`Cannot set unbound symbol "${key.atom}"`);
+  // },
   import: async (st, env) => {
     const oriEnv = env.head;
     const [importPath, refPath] = extractImportPath(st, env);
