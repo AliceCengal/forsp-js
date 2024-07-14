@@ -26,16 +26,19 @@
   ; 21 divisors print;
   ; 28 divisors print;
 
-  10 divisor-count print;
-  15 divisor-count print;
-  21 divisor-count print;
-  28 divisor-count print;
+  ; 10 divisor-count print;
+  ; 15 divisor-count print;
+  ; 21 divisor-count print;
+  ; 28 divisor-count print;
 
   1 enumerate$
-  (>n <n <n 1 + * 2 / divisor-count) map$ ; triangle numbers
-  ; (10 lt?) take-while$
+  (>n <n <n 1 + * 2 /) map$ ; triangle numbers
+  ; (>n <n divisor-count <n cons) map$
+  ; (cdr 10 lt?) take-while$
+  (divisor-count) map$
+  ; (100 lt?) take-while$
   10 take$
   collect$ print;
 
-  stack print;
+  ; cannot compute
 )
