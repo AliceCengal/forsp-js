@@ -80,6 +80,10 @@
 
   (tag >t (<t 0 eq?) (<t 3 eq?) or?)   >list?
 
+  (>c
+    <c (<c cdr) and? <c (<c car) and?
+  )                                    >splat
+
   (
     >fn 'end-list fn nil
     (
@@ -172,32 +176,38 @@
 
   ;; Stream constructors and higher order functions
 
-  (>self >n 
-    (<n 1 + self) <n cons
-  ) rec                                >enumerate$
-
-  (>self
-    (self) rand cons
-  ) rec                                >rand$
-
   <car                                 >car$
   (cdr force)                          >cdr$
-  (>$ <$ cdr$ <$ car$)                 >next$
+  (>d >a <a (<d <a cons) and?)         >cons$
+  (>$
+    if (<$)
+      (<$ cdr$ <$ car$)
+      (nil nil)
+    endif
+  )                                    >next$
+  (>f ((>x (<x x) f cons$) >x <x x))   >rec$
 
-  (>self >list
-    (<list)
-    ((<list cdr self) <list car cons) and?
-  ) rec                                >iter$
+  (>self >n 
+    <n (<n 1 + self) 
+  ) rec$                               >enumerate$
 
-  (>self >n >$
-    (<$) (<n 0 gt?) and?
-    ((<$ cdr$ <n 1 - self) <$ car$ cons) and?
-  ) rec                                >take$
+  (>self
+    rand (self)
+  ) rec$                               >rand$
 
-  (>self >fn >$
-    (<$) (<$ car$ fn) and?
-    ((<$ cdr$ <fn self) <$ car$ cons) and?
-  ) rec                                >take-while$
+  (>self splat >head >tail
+    <head (<tail self)
+  ) rec$                               >iter$
+
+  (>self >n next$ >head >tail$
+    <n 0 gt? <head and?
+    (<tail$ <n 1 - self)
+  ) rec$                               >take$
+
+  (>self >fn next$ >head >tail$
+    <head fn (<head) and?
+    (tail$ <fn self)
+  ) rec$                               >take-while$
 
   (>self >$2 >$1 
     if (<$1)
@@ -206,14 +216,10 @@
     endif
   ) rec                                >join$
 
-  (>self >$2 >$1
-    ($1 $2 and?)
-    (
-      (<$1 cdr$ <$2 cdr$ self) 
-      $2 car$ $1 car$ cons 
-      cons
-    ) and?
-  ) rec                                >zip$
+  (>self next$ >h2 >t2 next$ >h1 >t1
+    h1 h2 and? (h2 h1 cons) and?
+    (<t1 <t2 self)
+  ) rec$                               >zip$
 
   (>self >n >$
     if (<n 0 gt? (<$) and?)
@@ -222,10 +228,10 @@
     endif
   ) rec                                >drop$
 
-  (>self >fn >$
-    <$
-    ((<$ cdr$ <fn self) <$ car$ fn cons) and?
-  ) rec                                >map$
+  (>self >fn next$ >head >tail$
+    <head (<head fn) and?
+    (tail$ <fn self)
+  ) rec$                               >map$
 
   (>self >fn >$
     (<$)
