@@ -15,8 +15,8 @@
     ) rec force
   ) >divisors
 
-  (>n <n 0.5 ** ceil >limit
-    1 enumerate$ (dup * <n lt?) take-while$
+  (>n
+    1 enumerate$ <n 1 - 0.5 ** floor take$
     (>x <n <x divides?) filter$
     0 (>_ 1 +) fold$ 2 *
   ) >divisor-count
@@ -31,14 +31,19 @@
   ; 21 divisor-count print;
   ; 28 divisor-count print;
 
+  (>n <n <n 1 + * 2 /) >triangle
+
   1 enumerate$
-  (>n <n <n 1 + * 2 /) map$ ; triangle numbers
   ; (>n <n divisor-count <n cons) map$
   ; (cdr 10 lt?) take-while$
   (divisor-count) map$
   ; (100 lt?) take-while$
-  10 take$
-  collect$ print;
+  8 take$
+  ; collect$ print;
+
+  1 enumerate$ 4 take$ (*) reduce$ 2 * >n
+  <n triangle print;
+  <n triangle divisor-count print;
 
   ; cannot compute
 )
