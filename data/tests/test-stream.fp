@@ -1,16 +1,6 @@
 (
   "../presets/std" import*
 
-  '() iter$ 
-  (100 *) map$ 
-  (2 divides?) filter$ 
-  2 drop$ 
-  5 take$
-  (10 lt?) take-while$
-  rand$ zip$
-  '() iter$ join$
-  collect$ print;
-
   '(1 2 3 4) iter$ collect$ print;
   '(1 2 3 4) iter$ 6 take$ collect$ print;
   rand$ 2 take$ collect$ print;
