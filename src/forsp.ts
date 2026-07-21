@@ -309,6 +309,10 @@ function print(st: State, value: Value) {
   st.io.std.printLine(toString(value));
 }
 
+function printLine(st: State, value: Value) {
+  st.io.std.printLine(toString(value) + "\n")
+}
+
 function toString(value: Value): string {
   switch (value.tag) {
     case TAG.NIL:
@@ -574,6 +578,9 @@ const EXTRA_PRIMITIVES: Record<string, PrimFunc> = {
       }
     }
   },
+  "print-line": async (st, _) => {
+    printLine(st, pop(st));
+  }
   // "string-apply": (st, env) => {
   //   const args = pop(st);
   //   const method = pop(st);
@@ -680,7 +687,7 @@ function extractImportPath(st: State, env: ListHead) {
   }
   try {
     refPath = (envFind(env, scriptPath) as Atom).atom;
-  } catch (err) {}
+  } catch (err) { }
 
   envDefine(env, scriptPath, makeAtom(importPath));
   return [importPath, refPath];
