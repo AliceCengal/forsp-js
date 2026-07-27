@@ -18,19 +18,18 @@
         :href "manifest.json")
       (:meta
         :name "viewport"
-        :content "width=device-width, initial-scale=1.0"))
-      ; (:title "Calculator")
+        :content "width=device-width, initial-scale=1.0")
+      (:title "Calculator")
       (:link 
         :rel "stylesheet"
         ; :href "https://cdn.jsdelivr.net")
-        :href cdn-url)
+        :href cdn-url))
     (:body
       (:div
         :id "app")
       (:script
         :type "module"
-        :src "/src/main.tsx"))
-  )
+        :src "/src/main.tsx")))
   >example-page
 
   ;<page list >page-list
@@ -68,13 +67,14 @@
           <html-list cdr >next
           if (<curr atom?)
             ("=" <curr " " print print print
+            <next car >curr
+            <next cdr >next
+            if (<curr string?)
+              ("\"" <curr "\"" print print print)
+              (<curr print)
+            endif
             <next self)
-          elseif (<curr string?)
-            ("\"" <curr "\"" print print print
-            <next self)
-          elseif (<curr num?)
-            (<curr print)
-          elseif (<curr closure?)
+          elseif ((<curr closure?) (<curr string?) or?)
             ; leave the remaining data on the stack and pass
             (<html-list) 
             () ; do nothing
@@ -97,7 +97,10 @@
           <html-list car >curr
           <html-list cdr >next
           ; "" print-line
-          <curr self
+          if (<curr string?)
+            (<curr print)
+            (<curr self)
+          endif
           <next self-2
         )
       endif
