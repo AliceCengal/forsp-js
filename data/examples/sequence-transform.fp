@@ -25,5 +25,5 @@
 
   pi$ 8 accelerate-converge$
   
-  5 take$ (print) each$;
+  5 take$ (print-line) each$;
 )
